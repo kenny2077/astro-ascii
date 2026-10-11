@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gargantua</title>
+<style>
+  :root { --ground: #04060c; --ink: #8d97ad; --dim: #7a849c; }
+  html, body { margin: 0; height: 100%; background: var(--ground); }
+  body { display: grid; place-items: center; overflow: hidden; }
+  canvas { display: block; max-width: 100vw; max-height: 100vh; }
+  p {
+    position: fixed; left: 24px; right: 24px; bottom: 16px; margin: 0;
+    font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--ink);
+  }
+  p span { color: var(--dim); margin-left: 1.2em; }
+  body.shot p { display: none; }
+  ::selection { background: #7f4630; color: #fff4e2; }
+</style>
+</head>
+<body>
+<canvas id="c" role="img" aria-label="a black hole drawn in dots: a thin white-blue ring round an empty shadow, its amber disk crossing in front and bent up over the top, two small planets on the disk"></canvas>
+<p>gargantua<span>a lensed disk turning round an empty shadow</span></p>
+<script>
+// <piece>
+/*
+ * gargantua: the black hole from the photo, as a halftone of dots.
+ * Rays are traced once through Schwarzschild space (the method from
+ * bas3line/ascii's black-hole piece, MIT); each frame only the gas turns.
+ * Colour is shaded per cell, then drawn as · • ● by brightness, Bayer
+ * dithered, in the palette colour nearest its hue.
+ */
+const W = 200, H = 112, FPS = 15;
+const LOOP = 18; // every motion comes back to its start this often, so a GIF of it loops without a seam
+const TAU = 2 * Math.PI;
+const GROUND = "#04060c";
+const PALETTE = [
+  // night sky
+  "#0b1322", "#101b30", "#16243f", "#1e3050", "#2a3f63", "#3b4a6e",
+  // the ring, cool
+  "#4a6f9a", "#6f9ccc", "#9fc4e8", "#c8e0ff", "#eef6ff", "#ffffff",
+  // the disk, hot to cold
+  "#fff4e2", "#ffe9cc", "#ffe2b8", "#ffd6a0", "#f6c48e", "#e9ad78", "#d99464", "#c27a52",
+  "#a35f40", "#7f4630", "#5c3224", "#3e221a",
+  // the red-violet edge of the halo
+  "#e0a59a", "#c47a6e", "#b8606a", "#8a4458", "#5a3048", "#3a2238",
+  // stars, dust
+  "#eef3ff", "#ffe9c4", "#2a2530", "#1a1820",
+];
+const DOTS = " ·•●";
+const COVER = [0, 0.3, 0.6, 1];
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map((v) => v / 16 - 0.47);
+
+// The camera, in Schwarzschild radii and radians.
+const D = 50, IN = 1.7, OUT = 60; // the disk runs on past the camera, so it widens toward the frame's edges
+const TILT = 0.045;           // height above the disk plane
+const ROLL = 0.27;            // the disk rises to the right, as in the photo
+const SPAN = 0.2855;          // half the view's width, as a tangent
+const BC = 1.5 * Math.sqrt(3); // the photon ring's impact parameter
+const BCT = BC / D;           // and its size on screen, as a tangent
+const SS = 3;                 // rays per cell, each way
+const BMAX = 20, NB = 2400, HS = 0.02;
+const PLANETS = [[55.5, 75.5, 4.9], [133.8, 53.8, 3.2]]; // x, y, radius in cells
+
+function hash(x, y) {
+  let h = Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263);
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+function noise(x, y) {
+  const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi;
+  const u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy);
+  const a = hash(xi, yi), b = hash(xi + 1, yi), c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
+  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+}
+// noise that repeats every P along x, for drifts that must come round again
+function noiseP(x, y, P) {
+  const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi;
+  const u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy);
+  const x0 = ((xi % P) + P) % P, x1 = (x0 + 1) % P;
+  const a = hash(x0, yi), b = hash(x1, yi), c = hash(x0, yi + 1), d = hash(x1, yi + 1);
+  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+}
+function fbm(x, y, o) {
+  let s = 0, n = 0, amp = 0.5, f = 1;
+  for (let i = 0; i < o; i++) { s += amp * noise(x * f, y * f); n += amp; amp *= 0.5; f *= 2; }
+  return s / n;
+}
+const clamp = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+const smooth = (a, b, v) => { const k = clamp((v - a) / (b - a)); return k * k * (3 - 2 * k); };
+const mix = (a, b, k) => a + (b - a) * k;
+const hex = (s) => [1, 3, 5].map((i) => parseInt(s.slice(i, i + 2), 16) / 255);
+
+// u = 1/r along a ray of impact parameter b obeys u'' = 1.5u² - u; RK4 until it falls in or leaves.
+function paths() {
+  const f = (u) => 1.5 * u * u - u;
+  const table = [];
+  for (let n = 0; n < NB; n++) {
+    const b = ((n + 0.5) / NB) * BMAX;
+    let u = 1 / D, w = Math.sqrt(Math.max(0, 1 - (b / D) ** 2)) / b;
+    const us = [u];
+    while (u < 1 && (u > 1 / (OUT + 1) || w > 0)) {
+      const k1 = w, l1 = f(u);
+      const k2 = w + (HS / 2) * l1, l2 = f(u + (HS / 2) * k1);
+      const k3 = w + (HS / 2) * l2, l3 = f(u + (HS / 2) * k2);
+      const k4 = w + HS * l3, l4 = f(u + HS * k3);
+      u += (HS / 6) * (k1 + 2 * k2 + 2 * k3 + k4);
+      w += (HS / 6) * (l1 + 2 * l2 + 2 * l3 + l4);
+      us.push(u);
+    }
+    table.push(Float32Array.from(us));
+  }
+  return table;
+}
+
+function gargantua() {
+  const P = PALETTE.map(hex);
+  const N = W * H;
+  const lut = new Uint8Array(32768).fill(255);
+  const nearest = (r, g, b) => {
+    const k = (Math.min(31, (r * 31.99) | 0) << 10) | (Math.min(31, (g * 31.99) | 0) << 5) | Math.min(31, (b * 31.99) | 0);
+    if (lut[k] !== 255) return lut[k];
+    let best = 0, bd = 1e9;
+    for (let i = 0; i < P.length; i++) {
+      const dr = P[i][0] - r, dg = P[i][1] - g, db = P[i][2] - b;
+      const d = 0.3 * dr * dr + 0.5 * dg * dg + 0.2 * db * db;
+      if (d < bd) (bd = d), (best = i);
+    }
+    return (lut[k] = best);
+  };
+
+  // --- the rays, traced once -------------------------------------------------
+  const table = paths();
+  const cw = (2 * SPAN) / W;
+  const s = Math.sin(TILT), c = Math.cos(TILT);
+  const cr = Math.cos(ROLL), sr = Math.sin(ROLL);
+  const hits = Array.from({ length: N }, () => []); // per crossing: r, phi, weight, how far it is reddened
+  const shadow = new Float32Array(N), ring = new Float32Array(N), bcell = new Float32Array(N);
+  const camX = new Float32Array(N), camY = new Float32Array(N); // each cell in the disk's own frame, as tangents
+  const per = 1 / (SS * SS);
+  for (let j = 0; j < H * SS; j++) {
+    const sy = (H / 2 - (j + 0.5) / SS) * cw;
+    for (let i = 0; i < W * SS; i++) {
+      const sx = ((i + 0.5) / SS - W / 2) * cw;
+      const k = Math.floor(j / SS) * W + Math.floor(i / SS);
+      const x = sx * cr + sy * sr, y = -sx * sr + sy * cr;
+      const n = Math.hypot(x, y, 1);
+      const d = [x / n, (y * c - s) / n, (y * s + c) / n];
+      const out = d[1] * s - d[2] * c;
+      const side = Math.sqrt(Math.max(1e-9, 1 - out * out));
+      const e2 = [d[0] / side, (d[1] - out * s) / side, (d[2] + out * c) / side];
+      const b = D * side;
+      bcell[k] += b * per;
+      camX[k] += x * per, camY[k] += y * per;
+      // thin and crisp, a little brighter over the top and left
+      const lean = 0.9 + 0.15 * Math.max(0, (y * 0.85 - x * 0.5) / Math.hypot(x, y));
+      ring[k] += (Math.exp(-(((b - BC) / 0.07) ** 2)) + 0.08 * Math.exp(-(((b - BC) / 0.35) ** 2)) * (b > BC ? 1 : 0.25)) * lean * per;
+      const us = table[Math.min(NB - 1, Math.floor((b * NB) / BMAX))];
+      if (us[us.length - 1] >= 1) shadow[k] += per;
+      const end = Math.min((us.length - 1) * HS, 5.6);
+      let light = 1;
+      for (let a = (Math.atan2(-s, e2[1]) + 2 * Math.PI) % Math.PI; a < end; a += Math.PI) {
+        const p = a / HS, q = Math.floor(p);
+        if (q + 1 >= us.length) break;
+        const r = 1 / (us[q] + (us[q + 1] - us[q]) * (p - q));
+        if (r <= IN || r >= OUT || b < BC * 1.02) continue;
+        const phi = Math.atan2(Math.sin(a) * e2[2] - Math.cos(a) * c, Math.sin(a) * e2[0]);
+        // the image bent round under the shadow is dimmer and redder, as in the photo
+        const under = a > Math.PI / 2 && y < 0 ? 1 : 0;
+        // the near side of the disk thins to nothing, so the band in front stays a band
+        const near = Math.exp(-Math.max(0, r * Math.cos(a) - 3) / 5);
+        // a dim lane just outside the photon ring, so the ring stands clear of the halo
+        const lane = 1 - 0.8 * Math.exp(-(((b - BC - 0.34) / 0.15) ** 2));
+        hits[k].push(r, phi, light * per * near * lane * (under ? 0.85 : 1), under);
+        light *= 0.5; // a crossing seen through the disk is dimmer
+      }
+    }
+  }
+
+  // the gas: fine striations across radius, slow clumps along the orbit
+  const TR = 220, TA = 512;
+  const tex = new Float32Array(TR * TA), turns = new Int8Array(TR);
+  for (let ri = 0; ri < TR; ri++) {
+    // Kepler's turning, rounded to whole turns a loop; rows are blended, so the rounding never tears
+    turns[ri] = Math.round((0.7 * (3 / (IN * (OUT / IN) ** (ri / (TR - 1)))) ** 1.5 * LOOP) / TAU);
+    const waves = [2, 3, 5, 8, 13, 21, 34, 55].map((k) => [k, hash(ri, k) * 6.283, (0.4 + hash(k, ri)) / Math.sqrt(k)]);
+    const stri = 0.3 + 1.25 * smooth(0.35, 0.75, fbm(ri * 0.12, 3.3, 3)) ** 1.5;
+    for (let ai = 0; ai < TA; ai++) {
+      let v = 0;
+      for (const [k, p, a] of waves) v += a * Math.sin((k * 2 * Math.PI * ai) / TA + p);
+      tex[ri * TA + ai] = stri * (0.62 + 0.18 * v);
+    }
+  }
+  const at = (ri, ang) => {
+    let ai = Math.floor((ang / TAU) * TA) % TA;
+    if (ai < 0) ai += TA;
+    return tex[ri * TA + ai];
+  };
+  const gas = (r, phi, spin) => {
+    const fr = (Math.log(r / IN) / Math.log(OUT / IN)) * (TR - 1);
+    const r0 = Math.min(TR - 2, Math.floor(fr)), f = fr - r0;
+    return at(r0, phi - turns[r0] * spin) * (1 - f) + at(r0 + 1, phi - turns[r0 + 1] * spin) * f;
+  };
+
+  // --- the still parts: planets, stars, dust ---------------------------------
+  const planet = new Float32Array(N), rimP = new Float32Array(N);
+  const star = new Float32Array(N), dust = new Float32Array(N);
+  for (let r = 0; r < H; r++) for (let x = 0; x < W; x++) {
+    const k = r * W + x;
+    for (const [px, py, pr] of PLANETS) {
+      const dx = x + 0.5 - px, dy = r + 0.5 - py, d = Math.hypot(dx, dy);
+      const margin = Math.min(1.4, 0.4 + 0.3 * pr);
+      if (d < pr + margin) {
+        // the body, and a dark margin round it so the lit limb stands clear of the disk
+        planet[k] = Math.max(planet[k], smooth(pr + margin, pr + margin * 0.45, d));
+        // lit on the limb that faces the hole
+        const hx = W / 2 - px, hy = H / 2 - py, hl = Math.hypot(hx, hy);
+        const facing = (dx * hx + dy * hy) / (d * hl + 1e-6);
+        rimP[k] = Math.max(rimP[k], smooth(pr - 0.9 - 1.3 * smooth(0.3, 0.95, facing), pr - 0.5, d) * smooth(pr + 0.2, pr - 0.2, d) * smooth(0.25, 0.8, facing));
+      }
+    }
+    const h = hash(x, r + 101);
+    if (h > 0.988) star[k] = 0.3 + (h - 0.988) * 55;
+    dust[k] = smooth(0.48, 0.75, fbm(x * 0.035, r * 0.05 + 9, 4)) * smooth(120, 200, x);
+  }
+
+  const R = new Float32Array(N), G = new Float32Array(N), B = new Float32Array(N);
+  const bR = new Float32Array(N), bG = new Float32Array(N), bB = new Float32Array(N), tmp = new Float32Array(N);
+  const blur = (src, rad) => { // box blur, twice each way: near enough a gaussian
+    for (let pass = 0; pass < 2; pass++) {
+      for (let y = 0; y < H; y++) {
+        let acc = 0;
+        for (let x = -rad; x <= rad; x++) acc += src[y * W + Math.min(W - 1, Math.max(0, x))];
+        for (let x = 0; x < W; x++) {
+          tmp[y * W + x] = acc / (2 * rad + 1);
+          acc += src[y * W + Math.min(W - 1, x + rad + 1)] - src[y * W + Math.max(0, x - rad)];
+        }
+      }
+      for (let x = 0; x < W; x++) {
+        let acc = 0;
+        for (let y = -rad; y <= rad; y++) acc += tmp[Math.min(H - 1, Math.max(0, y)) * W + x];
+        for (let y = 0; y < H; y++) {
+          src[y * W + x] = acc / (2 * rad + 1);
+          acc += tmp[Math.min(H - 1, y + rad + 1) * W + x] - tmp[Math.max(0, y - rad) * W + x];
+        }
+      }
+    }
+  };
+
+  const chars = new Array(N);
+  return (t, color) => {
+    const ph = (((t % LOOP) + LOOP) % LOOP) / LOOP, spin = TAU * ph; // 0 → 1 over the loop
+    const breathe = 1 + 0.2 * Math.sin(spin * 3);
+    for (let k = 0; k < N; k++) {
+      let r = 0, g = 0, b = 0;
+      const h = hits[k];
+      for (let i = 0; i < h.length; i += 4) {
+        const rr = h[i], phi = h[i + 1], dr = rr - IN;
+        const edge = smooth(0, 0.5, dr) * smooth(OUT, OUT * 0.6, rr);
+        const dop = 1 - 0.15 * Math.cos(phi);
+        const e = h[i + 2] * edge * dop * (1.7 * Math.exp(-dr / 5.5) + 0.015 * Math.exp(-dr / 14)) * (h[i + 3] ? 1.25 * Math.exp(-dr / 14) : 1) * gas(rr, phi, spin);
+        // white-hot inside, peach, then rust far out
+        const hot = Math.exp(-dr / 2.5) * (1 - h[i + 3]), warm = Math.exp(-dr / 10) * (1 - 0.6 * h[i + 3]);
+        r += e * (0.75 + 0.25 * warm);
+        g += e * (0.28 + 0.48 * warm + 0.2 * hot);
+        b += e * (0.12 + 0.2 * warm + 0.55 * hot + 0.22 * h[i + 3]);
+      }
+      const ri = ring[k] * breathe * 1.25;
+      const core = ring[k] > 0.5 ? 1 : 0; // white at the heart of the ring, blue-white round it
+      r += ri * (0.6 + 0.4 * core), g += ri * (0.78 + 0.22 * core), b += ri;
+      // The band of disk in front of the shadow. Traced, it is a hairline this
+      // close to edge on; the photo's is thick with glowing gas, so it is laid on.
+      const u = camX[k] / BCT, v = camY[k] / BCT;
+      const au = Math.abs(u), dv = v + 0.25;
+      // the band narrows away from the hole; on the right it hangs a little lower, as in the photo
+      const wb = (0.17 / (1 + 0.12 * au)) * (dv < 0 ? 1 + 0.5 * smooth(0.5, 2.5, u) : 1);
+      const prof = Math.exp(-((dv / wb) ** 2));
+      // lanes of gas along the band, and brighter knots running down them
+      const lanes = 0.78 + 0.4 * smooth(0.3, 0.75, noiseP(u * 0.8 - 5 * ph, (dv / wb) * 2.2 + 7, 5));
+      const fb = prof * (0.5 + 1.3 * Math.exp(-au / 1.4)) * (1 + 0.25 * smooth(0.5, 2.5, u) * smooth(7, 3.5, u))
+        * lanes * (0.8 + 0.5 * smooth(0.3, 0.8, noiseP(u * 4 - 25 * ph, v * 4, 25))) * 1.05;
+      // it hides what lies behind it
+      const occ = clamp(prof * 1.3) * smooth(4.5, 1.2, au);
+      r *= 1 - 0.85 * occ, g *= 1 - 0.85 * occ, b *= 1 - 0.85 * occ;
+      const hotB = Math.exp(-au / 1.4);
+      r += fb * (0.8 + 0.2 * hotB), g += fb * (0.42 + 0.52 * hotB), b += fb * (0.26 + 0.6 * hotB);
+      // the arc bent round under the shadow: thin, dim, rose
+      const rad = Math.hypot(u, v);
+      const la = Math.exp(-(((rad - 1.36) / 0.13) ** 2)) * smooth(-0.3, -0.6, v) * (0.5 + 0.5 * noiseP(Math.atan2(v, u) * 9 + 9 * ph, 2, 9)) * 0.42;
+      r += la * 0.9, g += la * 0.42, b += la * 0.45;
+      R[k] = r, G[k] = g, B[k] = b;
+    }
+    // the glow: near and wide, kept out of the heart of the shadow
+    bR.set(R), bG.set(G), bB.set(B);
+    blur(bR, 2), blur(bG, 2), blur(bB, 2);
+    const w = 0.55;
+    for (let k = 0; k < N; k++) {
+      const core = smooth(0.55 * BC, 1.02 * BC, bcell[k]);
+      R[k] += bR[k] * w * core, G[k] += bG[k] * w * core, B[k] += bB[k] * w * core * 1.15;
+    }
+    bR.set(R), bG.set(G), bB.set(B);
+    blur(bR, 7), blur(bG, 7), blur(bB, 7);
+
+    for (let row = 0; row < H; row++) for (let x = 0; x < W; x++) {
+      const k = row * W + x;
+      const core = smooth(0.6 * BC, 1.05 * BC, bcell[k]);
+      let r = R[k] + bR[k] * 0.12 * core, g = G[k] + bG[k] * 0.12 * core, b = B[k] + bB[k] * 0.18 * core;
+      // the night: a faint navy, lighter where dust hangs to the right
+      const sky = 1 - shadow[k];
+      const du = dust[k];
+      r += sky * (0.025 + 0.03 * du), g += sky * (0.035 + 0.022 * du), b += sky * (0.075 + 0.02 * du);
+      if (star[k] > 0 && shadow[k] < 0.01) {
+        const tw = 0.6 + 0.4 * Math.sin(spin * Math.round(((1.1 + 2.7 * hash(x, row)) * LOOP) / TAU) + TAU * hash(row, x));
+        const st = Math.min(0.5, star[k] * tw) * clamp(1 - Math.max(r, g, b) * 2.5); // a star never swells past •
+        const warmS = hash(x * 3, row) > 0.7;
+        r = Math.max(r, st * (warmS ? 1 : 0.88)), g = Math.max(g, st * (warmS ? 0.9 : 0.93)), b = Math.max(b, st * (warmS ? 0.72 : 1));
+      }
+      let floor = 0.1 * sky * (1 - 0.35 * du);
+      const pl = planet[k];
+      if (pl > 0) {
+        const lit = rimP[k];
+        r = mix(r, 0.95 * lit, pl), g = mix(g, 0.85 * lit, pl), b = mix(b, 0.7 * lit, pl);
+        floor = mix(floor, 0, pl);
+        if (pl > 0.9 && lit < 0.05) r = g = b = 0;
+      }
+      // a soft vignette, as the photo has
+      const vx = (x + 0.5) / W - 0.5, vy = (row + 0.5) / H - 0.5;
+      const fade = smooth(0.78, 0.38, Math.hypot(vx * 1.1, vy * 1.5));
+      const peak = Math.max(r, g, b, 1e-4);
+      const level = clamp(floor + (1 - floor) * Math.pow(peak, 0.8) * 0.95) * (0.55 + 0.45 * fade);
+      const step = Math.max(0, Math.min(3, Math.round(level * 3 + BAYER[(row & 3) * 4 + (x & 3)])));
+      chars[k] = step;
+      const want = step ? Math.min(1, (level + 0.06) / COVER[step]) : 0;
+      const sc = (0.3 + 0.7 * want) / peak;
+      color[k] = nearest(clamp(r * sc), clamp(g * sc), clamp(b * sc));
+    }
+    return chars;
+  };
+}
+// </piece>
+
+// --- drawing: square cells, one glyph each, redrawn only when it changes ----
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+const frame = gargantua();
+const color = new Uint8Array(W * H);
+const last = new Int16Array(W * H).fill(-1);
+let cell = 0, atlas = null;
+function size() {
+  const dpr = devicePixelRatio || 1;
+  const css = Math.min(innerWidth / W, innerHeight / H);
+  cell = Math.max(2, Math.floor(css * dpr));
+  canvas.width = cell * W, canvas.height = cell * H;
+  canvas.style.width = (cell * W) / dpr + "px";
+  canvas.style.height = (cell * H) / dpr + "px";
+  // every dot in every colour, drawn once
+  atlas = document.createElement("canvas");
+  atlas.width = cell * 4, atlas.height = cell * PALETTE.length;
+  const a = atlas.getContext("2d");
+  a.font = `${cell / 0.6}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+  a.textAlign = "center", a.textBaseline = "middle";
+  for (let p = 0; p < PALETTE.length; p++) {
+    a.fillStyle = PALETTE[p];
+    for (let g = 1; g < 4; g++) {
+      a.save(); a.beginPath(); a.rect(g * cell, p * cell, cell, cell); a.clip();
+      a.fillText(DOTS[g], g * cell + cell / 2, p * cell + cell / 2);
+      a.restore();
+    }
+  }
+  ctx.fillStyle = GROUND;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  last.fill(-1);
+}
+function draw(t) {
+  const chars = frame(t, color);
+  ctx.fillStyle = GROUND;
+  for (let k = 0; k < W * H; k++) {
+    const id = chars[k] ? chars[k] * 64 + color[k] : 0;
+    if (id === last[k]) continue;
+    last[k] = id;
+    const x = (k % W) * cell, y = Math.floor(k / W) * cell;
+    ctx.fillRect(x, y, cell, cell);
+    if (chars[k]) ctx.drawImage(atlas, chars[k] * cell, color[k] * cell, cell, cell, x, y, cell, cell);
+  }
+}
+
+const q = new URLSearchParams(location.search);
+if (q.has("shot")) document.body.classList.add("shot");
+size();
+addEventListener("resize", () => { size(); });
+const fixed = q.get("t");
+const still = fixed !== null || matchMedia("(prefers-reduced-motion: reduce)").matches;
+if (still) {
+  draw(fixed !== null ? +fixed : 0);
+  addEventListener("resize", () => draw(fixed !== null ? +fixed : 0));
+} else {
+  const t0 = performance.now();
+  let next = 0;
+  const loop = (now) => {
+    if (now >= next) { next = now + 1000 / FPS; draw((now - t0) / 1000); }
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
