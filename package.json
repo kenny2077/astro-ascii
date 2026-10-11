@@ -1,0 +1,10 @@
+{
+  "name": "astro-ascii",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A collection of animated astronomy art drawn in characters.",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test tests/*.test.mjs" }
+}
