@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Solar system · Astro ASCII</title>
+<style>
+:root{color-scheme:dark;--bg:#080b11;--ink:#e8e5df;--muted:#a0aaba;--line:#303949;--accent:#e7c58f}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}main{max-width:1500px;margin:auto;padding:28px 40px}header{display:flex;justify-content:space-between;align-items:center;gap:20px;border-bottom:1px solid var(--line);padding-bottom:20px}header a,a{color:var(--muted);text-underline-offset:5px}header p{margin:0;font-size:12px}h1{font:400 22px/1.4 ui-monospace,monospace;margin:0}.viewer{display:grid;grid-template-columns:minmax(0,1fr) 290px;align-items:center;gap:36px;min-height:520px}canvas{display:block;width:100%;height:auto}#globe{aspect-ratio:4/3;max-height:64vh;object-fit:contain}h2{font-size:36px;font-weight:400;letter-spacing:-.03em;line-height:1.2;margin:0 0 18px}#description{color:var(--muted);margin:0 0 22px;max-width:35ch}.facts{font-size:12px;margin-bottom:26px;color:var(--muted)}.facts p{margin:6px 0}.facts strong{font-weight:400;color:var(--ink)}button,select{font:inherit;background:transparent;border:1px solid var(--line);color:var(--ink);padding:9px 12px;cursor:pointer;border-radius:3px;min-height:42px}button:hover,select:hover{border-color:var(--accent)}button:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:4px}.controls{display:flex;flex-wrap:wrap;gap:8px}.controls label{display:flex;align-items:center;gap:8px;margin-top:8px;color:var(--muted);font-size:12px}#bodies{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:8px;border-top:1px solid var(--line);padding-top:18px}#bodies button{border-color:transparent;padding:6px 3px 12px;color:var(--muted)}#bodies button[aria-pressed=true]{border-color:var(--accent);color:var(--accent);background:#121721}#bodies canvas{aspect-ratio:4/3}#bodies span{font-size:12px}footer{display:flex;justify-content:space-between;gap:24px;color:var(--muted);font-size:11px;margin-top:24px}footer p{max-width:82ch;margin:0}::selection{background:var(--accent);color:var(--bg)}.shot header,.shot aside,.shot #bodies,.shot footer{display:none}.shot main{padding:0;max-width:none}.shot .viewer{display:block;min-height:0}.shot #globe{max-height:none}
+@media(max-width:800px){main{padding:20px}.viewer{grid-template-columns:1fr;gap:0;min-height:0}#globe{max-height:none}aside{padding:5px 0 24px}h2{font-size:28px;margin-bottom:12px}#description{max-width:65ch}.facts{margin-bottom:16px}.controls label{margin-top:0}#bodies{grid-template-columns:repeat(3,1fr)}header p{display:none}footer{display:block}footer a{display:inline-block;margin-top:12px}}
+</style>
+<main>
+<header><h1>Solar system</h1><p>One star. Eight planets. Drawn in characters.</p><a href="../../README.md">Astro ASCII</a></header>
+<section class="viewer" aria-label="Selected celestial body"><canvas id="globe" width="960" height="720" role="img" aria-label="Animated Sun in colored characters"></canvas><aside><h2 id="name">Sun</h2><p id="description"></p><div class="facts"><p id="kind"></p><p id="feature"></p><p>Display cycle <strong>24 seconds</strong></p></div><div class="controls"><button id="play" aria-pressed="true">Pause</button><button id="previous" aria-label="Previous body">Previous</button><button id="next" aria-label="Next body">Next</button><label>Glyphs <select id="style"><option value="dots">Dot scenes · • ●</option><option value="ascii">Strict ASCII . : o O @</option></select></label></div></aside></section>
+<nav id="bodies" aria-label="Select the Sun or a planet"></nav>
+<footer><p>Procedural art, not spacecraft imagery. Bodies are framed individually; sizes, lighting, tilts, and rotation periods are illustrative. Colors are stylized. Dot scenes use Unicode; strict ASCII is also available.</p><a href="https://science.nasa.gov/solar-system/planets/" target="_blank" rel="noreferrer">NASA reference ↗</a></footer>
+</main>
+<script>
+// <solar-engine>
+const LOOP=24,TAU=Math.PI*2;
+const BODIES=[
+ {id:'sun',name:'Sun',kind:'star',feature:'Granulation & sunspots',description:'A restless surface of golden granules. Dark sunspots turn across the disk, framed by a restrained, warm corona.'},
+ {id:'mercury',name:'Mercury',kind:'planet',feature:'Cratered rocky surface',description:'A small, airless world. Overlapping impact craters break up a gray, weathered surface.'},
+ {id:'venus',name:'Venus',kind:'planet',feature:'Cloud-covered atmosphere',description:'A pale cream globe beneath a continuous cloud deck. Soft bands suggest atmospheric motion, not an exposed rocky surface.'},
+ {id:'earth',name:'Earth',kind:'planet',feature:'Oceans, continents & clouds',description:'Blue oceans, simplified continent silhouettes, polar ice, and a thin veil of white cloud. A hand-drawn geographic approximation.'},
+ {id:'mars',name:'Mars',kind:'planet',feature:'Rust-colored terrain & polar ice',description:'Ochre deserts and dark terrain rotate under soft light. A small pale cap marks the polar region.'},
+ {id:'jupiter',name:'Jupiter',kind:'planet',feature:'Cloud belts & Great Red Spot',description:'Cream zones alternate with copper cloud belts. An oval storm sits south of the equator, carried around the giant globe.'},
+ {id:'saturn',name:'Saturn',kind:'planet',feature:'Icy rings & muted cloud bands',description:'A quiet golden sphere inside broad rings. A dark division separates ring regions; the near arc passes in front of the globe.'},
+ {id:'uranus',name:'Uranus',kind:'planet',feature:'Pale cyan atmosphere',description:'A hazy blue-green ice giant, shown with its rotation axis tipped sideways. Faint atmospheric bands keep the surface quiet.'},
+ {id:'neptune',name:'Neptune',kind:'planet',feature:'Blue-green atmosphere & clouds',description:'A cool blue-green globe with subtle cloud streaks. The color is restrained rather than the strongly enhanced blue of some familiar images.'}
+];
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const mix=(a,b,t)=>a.map((v,i)=>v+(b[i]-v)*t);
+function noise(x,y,z){return (Math.sin(x*2.7+Math.sin(z*3.1))*Math.cos(y*3.3-z)+.5*Math.sin(x*7.1+y*5.3+z*6.7)+.25*Math.cos(x*15.3-y*12.1+z*11.7))/1.75;}
+function inside(lon,lat,poly){let yes=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const [x,y]=poly[i],[px,py]=poly[j];if((y>lat)!==(py>lat)&&lon<(px-x)*(lat-y)/(py-y)+x)yes=!yes;}return yes;}
+// Authored coarse coastlines, not a geographic dataset.
+const LAND=[
+ [[-168,70],[-130,72],[-108,78],[-55,52],[-66,44],[-82,25],[-98,17],[-117,32],[-128,52]],
+ [[-81,12],[-61,10],[-36,-6],[-47,-26],[-66,-56],[-76,-35]],
+ [[-18,36],[5,37],[34,30],[51,12],[42,-13],[18,-35],[8,-24],[-5,5],[-17,15]],
+ [[-10,36],[-10,59],[17,71],[55,70],[95,77],[180,62],[165,48],[140,35],[120,22],[105,1],[78,9],[66,27],[42,12],[28,41],[8,44]],
+ [[112,-11],[139,-10],[154,-24],[145,-39],[116,-33]],
+ [[-52,60],[-25,70],[-33,83],[-61,81]], [[45,-13],[51,-16],[48,-25],[44,-22]]
+];
+const CRATERS=Array.from({length:34},(_,i)=>{const lat=Math.asin(2*((i*.61803398875)%1)-1),lon=i*2.399963;return [Math.cos(lat)*Math.sin(lon),Math.sin(lat),Math.cos(lat)*Math.cos(lon),.025+(i%6)*.014]});
+function surface(id,x,y,z,spin){
+ const a=id==='uranus'?Math.PI*.48:id==='earth'?.18:id==='saturn'?.12:0;
+ const u=x*Math.cos(a)-y*Math.sin(a),v=x*Math.sin(a)+y*Math.cos(a);
+ const angle=spin*(id==='venus'?-1:1),xx=u*Math.cos(angle)+z*Math.sin(angle),zz=z*Math.cos(angle)-u*Math.sin(angle);
+ const lat=Math.asin(clamp(v,-1,1)),lon=Math.atan2(xx,zz),n=noise(xx*2,v*2,zz*2),fine=noise(xx*9,v*9,zz*9);
+ let c;
+ if(id==='sun'){
+  const gran=.5+.5*noise(xx*15,v*15,zz*15);c=mix([193,76,17],[255,221,137],gran);
+  const spot=Math.exp(-((xx-.32)**2+(v-.18)**2+(zz-.93)**2)*650)+Math.exp(-((xx+.44)**2+(v+.25)**2+(zz-.86)**2)*380);
+  c=c.map(q=>q*(1-.86*clamp(spot)));return c.map(q=>q*(.68+.32*Math.pow(z,.4)));
+ }
+ if(id==='mercury'){
+  let relief=0;for(const [cx,cy,cz,r] of CRATERS){const d=Math.hypot(xx-cx,v-cy,zz-cz)/r;if(d<1.7)relief+=.23*Math.exp(-(((d-1)/.20)**2))-.32*Math.exp(-d*d*2);}
+  c=mix([79,77,74],[183,177,166],clamp(.48+.25*n+.15*fine+relief));
+ }else if(id==='venus')c=mix([173,147,99],[243,229,188],clamp(.64+.15*Math.sin(lat*19+n*2)+.09*n));
+ else if(id==='earth'){
+  const land=LAND.some(p=>inside(lon*180/Math.PI,lat*180/Math.PI,p));
+  c=land?mix([45,87,60],[160,142,86],clamp(.48+n*.7)):mix([15,49,100],[33,110,163],.45+.30*n);
+  if(Math.abs(lat)>1.27+.06*n)c=[207,221,214];
+  const clouds=clamp((noise(xx*5+Math.sin(spin),v*7,zz*5+Math.cos(spin))-.22)*1.5);c=mix(c,[238,243,233],clouds*.88);
+ }else if(id==='mars'){
+  c=mix([93,62,44],[211,136,82],clamp(.61+.45*n+.10*fine));if(Math.abs(lat)>1.36+.04*n)c=[221,208,179];
+ }else if(id==='jupiter'){
+  const band=Math.sin(lat*28+1.2*n)+.4*Math.sin(lat*63+n);c=mix([151,91,58],[239,217,178],clamp(.52+.30*band+.10*fine));
+  const d=Math.hypot(Math.atan2(Math.sin(lon-.5),Math.cos(lon-.5))/.27,(lat+.30)/.12);if(d<1.3)c=mix(c,mix([152,66,42],[212,134,86],.5+.5*Math.sin(d*14+n*2)),clamp((1.3-d)*3));
+ }else if(id==='saturn')c=mix([173,149,102],[230,214,170],clamp(.57+.21*Math.sin(lat*32+n*.6)+.08*n));
+ else if(id==='uranus')c=mix([111,171,178],[174,217,213],clamp(.63+.07*Math.sin(lat*18)+.06*n));
+ else c=mix([83,137,163],[142,191,201],clamp(.49+.13*Math.sin(lat*23+n)+.10*n));
+ const light=.23+.77*Math.max(0,-x*.38+y*.28+z*.881),rim=Math.pow(1-z,3);
+ c=c.map(q=>q*light);
+ if(['earth','uranus','neptune'].includes(id))c=mix(c,id==='earth'?[46,108,166]:[105,164,183],rim*.25);
+ return c;
+}
+function renderBody(id,t,width=200,height=150){
+ const rgb=new Uint8ClampedArray(width*height*3),spin=TAU*((t%LOOP+LOOP)%LOOP)/LOOP;
+ const radius=height*(id==='saturn'?.245:.365);
+ for(let py=0;py<height;py++)for(let px=0;px<width;px++){
+  const x=(px+.5-width/2)/radius,y=-(py+.5-height/2)/radius,r2=x*x+y*y,k=(py*width+px)*3;let c=[8,11,17];
+  if(id==='sun'&&r2>1){const glow=Math.exp(-(Math.sqrt(r2)-1)*11)*(.6+.12*Math.sin(Math.atan2(y,x)*17+spin));c=[8+glow*117,11+glow*56,17+glow*7];}
+  if(r2<=1)c=surface(id,x,y,Math.sqrt(1-r2),spin);
+  if(id==='saturn'){
+   const a=-.38,u=x*Math.cos(a)-y*Math.sin(a),v=x*Math.sin(a)+y*Math.cos(a),rr=Math.hypot(u,v/.36);
+   if(rr>1.26&&rr<2.12&&(r2>1||v<0)){
+    const gap=rr>1.76&&rr<1.83,stripe=.78+.14*Math.sin(rr*136)+.06*Math.sin(rr*61+spin),shade=u>.25&&v>.1?.42:1;
+    c=gap?[17,20,24]:[204*stripe*shade,185*stripe*shade,145*stripe*shade];
+   }
+  }
+  for(let j=0;j<3;j++)rgb[k+j]=c[j];
+ }
+ return rgb;
+}
+// </solar-engine>
+const params=new URLSearchParams(location.search),canvas=document.querySelector('#globe'),ctx=canvas.getContext('2d');
+let selected=Math.max(0,BODIES.findIndex(b=>b.id===params.get('body'))),time=Number(params.get('t')||0),paused=params.has('t')||matchMedia('(prefers-reduced-motion: reduce)').matches,last=0;
+const W=200,H=150,BAYER=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
+function paint(target,id,t,small=false){
+ const w=small?80:W,h=small?60:H,cell=small?3:5,rgb=renderBody(id,t,w,h),c=target.getContext('2d');target.width=w*cell;target.height=h*cell;
+ c.fillStyle='#080b11';c.fillRect(0,0,target.width,target.height);c.textAlign='center';c.textBaseline='middle';c.font=`${cell*1.6}px Menlo,Consolas,monospace`;
+ const glyphs=document.querySelector('#style').value==='ascii'?' .:oO@':' ·•●';
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+  const k=(y*w+x)*3,r=rgb[k],g=rgb[k+1],b=rgb[k+2],peak=Math.max(r,g,b);if(peak<24)continue;
+  const level=clamp(Math.pow(peak/255,.72)),d=(BAYER[(y&3)*4+(x&3)]/16-.5)*.65,i=Math.max(1,Math.min(glyphs.length-1,Math.round(level*(glyphs.length-1)+d)));
+  const ink=id==='sun'?1.12:1.72;c.fillStyle=`rgb(${Math.min(255,r*ink)} ${Math.min(255,g*ink)} ${Math.min(255,b*ink)})`;c.fillText(glyphs[i],(x+.5)*cell,(y+.5)*cell);
+ }
+}
+function draw(t=time){paint(canvas,BODIES[selected].id,t);}
+function select(i){selected=(i+BODIES.length)%BODIES.length;const b=BODIES[selected];document.querySelector('#name').textContent=b.name;document.querySelector('#description').textContent=b.description;document.querySelector('#kind').textContent=b.kind==='star'?'Our solar system’s star':`Planet ${selected} from the Sun`;document.querySelector('#feature').textContent=b.feature;canvas.setAttribute('aria-label',`Animated ${b.name} drawn in colored characters`);document.querySelectorAll('#bodies button').forEach((el,j)=>el.setAttribute('aria-pressed',j===selected));params.set('body',b.id);history.replaceState(null,'','?'+params);document.title=`${b.name} · Astro ASCII`;draw();}
+const buttons=BODIES.map((b,i)=>{const button=document.createElement('button');button.type='button';button.setAttribute('aria-label',b.name);const mini=document.createElement('canvas');mini.setAttribute('aria-hidden','true');const label=document.createElement('span');label.textContent=b.name;button.append(mini,label);button.onclick=()=>select(i);document.querySelector('#bodies').append(button);paint(mini,b.id,0,true);return button;});
+function playLabel(){const b=document.querySelector('#play');b.textContent=paused?'Play':'Pause';b.setAttribute('aria-pressed',!paused);}
+document.querySelector('#play').onclick=()=>{paused=!paused;last=0;playLabel()};document.querySelector('#previous').onclick=()=>select(selected-1);document.querySelector('#next').onclick=()=>select(selected+1);
+document.querySelector('#style').onchange=()=>{buttons.forEach((b,i)=>paint(b.querySelector('canvas'),BODIES[i].id,0,true));draw()};
+matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',e=>{if(e.matches){paused=true;playLabel()}});
+document.addEventListener('visibilitychange',()=>last=0);
+function tick(now){requestAnimationFrame(tick);if(paused||document.hidden){last=0;return}if(!last){last=now;return}if(now-last<1000/12)return;time=(time+Math.min(now-last,200)/1000)%LOOP;last=now;draw();}
+if(params.has('shot'))document.body.classList.add('shot');select(selected);playLabel();requestAnimationFrame(tick);
+window.solar={select,draw,get time(){return time},get paused(){return paused},get selected(){return BODIES[selected].id}};
+</script>
+</html>

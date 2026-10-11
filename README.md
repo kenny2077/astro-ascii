@@ -19,10 +19,15 @@ Animated black holes and photo-based astronomy studies. Open a page, watch the l
 
 | Work | Medium | What moves | Open locally |
 | --- | --- | --- | --- |
+| **Solar system** | Nine procedural bodies: Sun + eight planets | Surface texture, cloud bands, and solar granulation | [Explore the collection](art/solar-system/index.html) |
 | **Black hole** | Procedural Unicode dot art | Accretion-disk texture and starlight | [Artwork](art/black-hole/index.html) |
 | **Astro photo study** | Photo-derived dot art, strict ASCII, or pixel rendering | Small brightness changes at fixed source positions | [Photo renderer](art/photo-study/index.html) |
 
 GitHub displays the GIF above, but does not execute HTML in repository file views. Download the repository and open an artwork in your browser.
+
+![The Sun and eight planets rendered as colored character art, each framed individually](assets/solar-system.png)
+
+The solar-system viewer includes all nine bodies, individual `?body=earth` links, pause/play, and dot or strict-ASCII rendering. Sizes and rotation speeds are illustrative, not to scale.
 
 The collection is at an early stage. These are artistic interpretations, not scientific simulations or a published SDK. The default scenes style uses Unicode `· • ●`; the photo study also offers printable ASCII characters.
 
