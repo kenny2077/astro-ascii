@@ -2,11 +2,13 @@
 
 ## Solar system
 
-One self-contained page renders the Sun and eight planets on shaded spheres using procedural surface functions. Mercury uses overlapping crater profiles; Venus uses subdued cloud bands; Earth uses coarse hand-authored continent polygons, ice, and clouds; Mars uses rust-colored terrain; Jupiter uses latitude bands and an oval storm. Saturn adds an inclined ring plane with front/back occlusion and a dark division. Uranus and Neptune use restrained cyan and blue-green atmospheres. The Sun is self-lit, with warm granulation, authored dark spots, and a faint corona.
+The viewer projects licensed Solar System Scope maps onto spheres. Mercury's craters, Earth's continents and cloud layer, Mars's surface markings, and Jupiter's cloud bands come from maps rather than procedural noise. Saturn uses an inclined ring plane sampled from the provider's ring map with geometric front/back occlusion. See [texture provenance](../art/solar-system/TEXTURES.md).
 
-The display uses a 200 × 150 character grid at a target 12 fps. All texture phases repeat after 24 seconds. Choose a body with the navigation or `?body=saturn`; add `&t=0` for a fixed frame or `&shot&t=0` for artwork-only capture. The default glyphs are Unicode dots; the alternate uses printable ASCII. Reduced motion pauses playback, and hidden tabs do not advance animation.
+The dot grid adapts to the displayed canvas size at a target 12 fps. Glyphs land on whole device-pixel cells so mobile thumbnails are not fractional reductions of a dense desktop grid. All rotations repeat after 48 seconds. Choose a body with the navigation or `?body=saturn`; add `&t=0` for a fixed frame or `&shot&t=0` for artwork-only capture. There is one rendering mode, using `· • ●`. Reduced motion pauses playback, and hidden tabs do not advance animation. The bundled `textures.js` pack supports offline file opening; keep it next to `index.html`.
 
-Sizes, spin periods, lighting, and tilts are illustrative. Earth coastlines and the cloud patterns are approximations. Glyph ink is brightened to compensate for the unpainted space between characters. This is a procedural art collection, not a simulation or a source for measurements.
+Near-full-phase lighting multiplies the source color by a factor at or below one. No specular component, additive white light, or channel-clipping exposure gain is used. Glyph ink retains the sampled RGB; glyph coverage supplies the dot texture. White areas can still exist in the source, such as Earth's clouds and Jupiter's pale zones.
+
+Sizes, spin periods, lighting, and tilts are illustrative. These maps are processed composites, not a single-date spacecraft observation. Venus is desaturated toward pale cream. The solar palette and the familiar deep-blue Neptune palette are enhanced, not calibrated natural colors. This is an art collection, not a source for measurements.
 
 ## Black hole
 

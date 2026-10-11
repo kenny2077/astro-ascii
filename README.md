@@ -19,7 +19,7 @@ Animated black holes and photo-based astronomy studies. Open a page, watch the l
 
 | Work | Medium | What moves | Open locally |
 | --- | --- | --- | --- |
-| **Solar system** | Nine procedural bodies: Sun + eight planets | Surface texture, cloud bands, and solar granulation | [Explore the collection](art/solar-system/index.html) |
+| **Solar system** | Nine texture-mapped bodies: Sun + eight planets | Mapped surfaces and cloud patterns rotating in dots | [Explore the collection](art/solar-system/index.html) |
 | **Black hole** | Procedural Unicode dot art | Accretion-disk texture and starlight | [Artwork](art/black-hole/index.html) |
 | **Astro photo study** | Photo-derived dot art, strict ASCII, or pixel rendering | Small brightness changes at fixed source positions | [Photo renderer](art/photo-study/index.html) |
 
@@ -27,7 +27,7 @@ GitHub displays the GIF above, but does not execute HTML in repository file view
 
 ![The Sun and eight planets rendered as colored character art, each framed individually](assets/solar-system.png)
 
-The solar-system viewer includes all nine bodies, individual `?body=earth` links, pause/play, and dot or strict-ASCII rendering. Sizes and rotation speeds are illustrative, not to scale.
+The solar-system viewer includes all nine bodies, individual `?body=earth` links, and pause/play. It uses one rendering style: small and large Unicode dots. Credited photo-derived maps replace synthetic surface patterns; gentle lighting preserves their colors without a clipped white highlight. Sizes and rotation speeds are illustrative, not to scale. Keep `textures.js` beside the HTML when copying this viewer.
 
 The collection is at an early stage. These are artistic interpretations, not scientific simulations or a published SDK. The default scenes style uses Unicode `· • ●`; the photo study also offers printable ASCII characters.
 
@@ -43,7 +43,7 @@ The photo study includes pause/play, motion intensity, character selection, side
 
 - **Recognizable subjects.** Preserve silhouette, negative space, and the source image's color relationships.
 - **Quiet motion.** Prefer small, periodic light changes to arbitrary distortion.
-- **Inspect the work.** Keep each artwork in a standalone HTML file with readable rendering code.
+- **Inspect the work.** Keep rendering code readable; the solar-system viewer includes a separate local texture pack.
 - **Credit the source.** Record photograph rights separately from the software license.
 
 The dot-halftone approach is inspired by [bas3line/ascii](https://github.com/bas3line/ascii). Its MIT notice is retained in [licenses](licenses/bas3line-MIT.txt).
@@ -68,4 +68,4 @@ For GIF export, see [the export guide](docs/exporting.md). For new works, see [C
 
 ## License and image rights
 
-Project code is MIT licensed. Third-party code retains its original notices. Source photographs are not automatically covered by this license. The public repository does **not** include *The Quiet Predator*, its derived previews, or the local Walensee study because redistribution permission has not been established. You can use a local copy with the photo renderer. See [credits and provenance](docs/credits.md).
+Project code is MIT licensed. Third-party code retains its original notices. Solar-system maps and adapted previews use Solar System Scope / INOVE assets under **CC BY 4.0**; see [texture attribution](art/solar-system/TEXTURES.md). Source photographs are not automatically covered by the code license. The public repository does **not** include *The Quiet Predator*, its derived previews, or the local Walensee study because redistribution permission has not been established. You can use a local copy with the photo renderer. See [credits and provenance](docs/credits.md).
