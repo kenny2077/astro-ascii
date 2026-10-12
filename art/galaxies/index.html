@@ -142,9 +142,9 @@ const STAR_COOL = [0.82, 0.9, 1], STAR_WHITE = [1, 0.97, 0.92], STAR_WARM = [1, 
 const GALAXIES = [
   {
     id: "triangulum", name: "Triangulum", catalog: "M33", distance: "2.7 million light-years", hue: "#e0a8b6",
-    description: "A loose, flocculent spiral seen at a slant, its pale blue disc studded with pink nebulae. Grey threads of Milky Way dust lie across the whole view.",
+    description: "A loose, flocculent spiral seen at a slant, its grey-blue disc studded with pink nebulae. Grey threads of Milky Way dust lie across the whole view.",
     motion: "The disc turns, pink nebulae glitter along its arms, and light runs along the threads of dust.",
-    geom: { cx: 121, cy: 68, R: 70, q: 0.6, pa: 1.05 }, exposure: 2.9,
+    geom: { cx: 121, cy: 68, R: 70, q: 0.6, pa: 1.05 }, exposure: 2.0,
     arms(r, phi) {
       // two main arms, and short broken ones between them: a flocculent spiral
       const w = phi + 0.5 * (fbm(r * 4, phi, 2) - 0.5);
@@ -160,10 +160,10 @@ const GALAXIES = [
       const a = this.arms(r, phi) * (0.3 + 0.8 * floc);
       const disc = (0.32 * Math.exp(-r / 0.5) + 0.08 * floc * Math.exp(-r / 0.6)) * smooth(1.06, 0.72, r);
       const cool = smooth(0.02, 0.16, r);
-      // pale blue, warmer toward the core
-      const R = disc * mix(0.95, 0.56, cool) + a * 0.6 * 0.56;
-      const G = disc * mix(0.85, 0.74, cool) + a * 0.6 * 0.76;
-      const B = disc * mix(0.66, 1.0, cool) + a * 0.6 * 1.0;
+      // a faint grey-blue, warmer toward the core
+      const R = disc * mix(0.95, 0.74, cool) + a * 0.6 * 0.74;
+      const G = disc * mix(0.85, 0.8, cool) + a * 0.6 * 0.8;
+      const B = disc * mix(0.66, 0.9, cool) + a * 0.6 * 0.9;
       // brown threads of dust, thickest round the core
       const tau = 1.2 * Math.pow(ridge(fbm(u * 10 + 11, v * 10, 4)), 5) * smooth(0.5, 0.06, r) * smooth(0.01, 0.04, r);
       return [R, G, B, tau];
