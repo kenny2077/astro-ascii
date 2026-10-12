@@ -9,7 +9,7 @@ Animated black holes and photo-based astronomy studies. Open a page, watch the l
 [![CI](https://github.com/kenny2077/astro-ascii/actions/workflows/ci.yml/badge.svg)](https://github.com/kenny2077/astro-ascii/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/code-MIT-blue.svg)](LICENSE)
 
-[Collection](#collection) · [Quick start](#quick-start) · [How it works](docs/rendering.md) · [Contributing](CONTRIBUTING.md) · [Credits](docs/credits.md)
+[Live preview](https://kenny2077.github.io/astro-ascii/) · [Collection](#collection) · [Quick start](#quick-start) · [How it works](docs/rendering.md) · [Contributing](CONTRIBUTING.md) · [Credits](docs/credits.md)
 
 ![An amber accretion disk bending around a dark black hole, rendered in animated dots](assets/black-hole.gif)
 
@@ -19,21 +19,21 @@ Animated black holes and photo-based astronomy studies. Open a page, watch the l
 
 | Work | Medium | What moves | Open locally |
 | --- | --- | --- | --- |
-| **Solar system** | Nine fixed-angle portraits: Sun + eight planets | Gentle light changes over stationary dot patterns | [Explore the collection](art/solar-system/index.html) |
+| **Solar system** | Nine fixed-angle portraits: Sun + eight planets | Body-specific cloud, dust, plasma, aurora, and ring dots | [Live solar system](https://kenny2077.github.io/astro-ascii/?piece=solar) |
 | **Black hole** | Procedural Unicode dot art | Accretion-disk texture and starlight | [Artwork](art/black-hole/index.html) |
 | **Astro photo study** | Photo-derived dot art, strict ASCII, or pixel rendering | Small brightness changes at fixed source positions | [Photo renderer](art/photo-study/index.html) |
 
-GitHub displays the GIF above, but does not execute HTML in repository file views. Download the repository and open an artwork in your browser.
+Open the [preview website](https://kenny2077.github.io/astro-ascii/) to play the collection without downloading. GitHub repository file views only show the source and static/GIF previews. The website publishes from `main` using GitHub Pages.
 
 ![The Sun and eight planets rendered as colored character art, each framed individually](assets/solar-system.png)
 
-The solar-system viewer includes all nine bodies, individual `?body=earth` links, and pause/play. It uses one rendering style: small and large Unicode dots. Each body holds a fixed angle and fixed dot sizes; only gentle, localized brightness changes animate. There is no rotation, scan line, or random flicker. Credited photo-derived maps retain their colors without a clipped white highlight. Body sizes are not to scale. Keep `textures.js` beside the HTML when copying this viewer.
+The solar-system viewer includes all nine bodies, shareable body links, and pause/play. It uses one rendering style: small and large Unicode dots. Each photographic portrait stays fixed while a separate dot layer moves along authored paths: solar prominences, cloud streams, dust, aurora, or rings. These accelerated effects are artistic interpretations, not live observations. There is no whole-globe rotation, scan line, or random frame noise. Keep `textures.js` beside the HTML when copying this viewer. See [the ascii.rest motion study](docs/ascii-rest-study.md).
 
 The collection is at an early stage. These are artistic interpretations, not scientific simulations or a published SDK. The default scenes style uses Unicode `· • ●`; the photo study also offers printable ASCII characters.
 
 ## Quick start
 
-1. Download **Code → Download ZIP**, or clone this repository.
+1. Visit the [website](https://kenny2077.github.io/astro-ascii/), or download **Code → Download ZIP** / clone for offline use.
 2. Open `art/black-hole/index.html` in a modern browser. No installation or build is needed.
 3. Open `art/photo-study/index.html` and choose a local astronomy photograph to compare ASCII and pixel treatments. The image stays in your browser.
 

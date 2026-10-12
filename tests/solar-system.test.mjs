@@ -2,16 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 const path=new URL('../art/solar-system/index.html',import.meta.url);
-function engine(){assert(existsSync(path),'solar-system artwork exists');const code=readFileSync(path,'utf8').split('// <solar-engine>')[1]?.split('// </solar-engine>')[0];assert(code,'testable rendering engine exists');return new Function(`${code};return {BODIES,renderBody,LOOP,shadeColor,setTextures};`)();}
+function engine(){assert(existsSync(path),'solar-system artwork exists');const code=readFileSync(path,'utf8').split('// <solar-engine>')[1]?.split('// </solar-engine>')[0];assert(code,'testable rendering engine exists');return new Function(`${code};return {BODIES,renderBody,LOOP,shadeColor,setTextures,effectParticles};`)();}
 function fixtures(e){const maps={};for(const id of [...e.BODIES.map(b=>b.id),'earth_clouds','saturn_ring']){const width=64,height=32,data=new Uint8ClampedArray(width*height*4);for(let y=0;y<height;y++)for(let x=0;x<width;x++){const k=(y*width+x)*4;data[k]=80+x*2;data[k+1]=70+y*3;data[k+2]=60+x;data[k+3]=255;}maps[id]={width,height,data};}e.setTextures(maps);return e;}
 test('collection contains the Sun and exactly eight planets in order',()=>{
  const {BODIES}=engine();assert.deepEqual(BODIES.map(b=>b.id),['sun','mercury','venus','earth','mars','jupiter','saturn','uranus','neptune']);
  assert.equal(BODIES.filter(b=>b.kind==='planet').length,8);
 });
-test('all nine portraits have subtle light changes and exactly looping frames',()=>{
+test('all nine photographic portraits remain identical while effects animate separately',()=>{
  const {BODIES,renderBody,LOOP}=fixtures(engine());
  for(const b of BODIES){const a=renderBody(b.id,0,80,64),end=renderBody(b.id,LOOP,80,64),mid=renderBody(b.id,5,80,64);
- assert.equal(a.length,80*64*3,b.id);assert(a.some(v=>v>80),b.id);assert.deepEqual(a,end,`${b.id} seam`);assert(a.some((v,i)=>v!==mid[i]),`${b.id} motion`);assert(a.every(Number.isFinite),b.id);
+ assert.equal(a.length,80*64*3,b.id);assert(a.some(v=>v>80),b.id);assert.deepEqual(a,end,`${b.id} seam`);assert.deepEqual(a,mid,`${b.id} fixed portrait`);assert(a.every(Number.isFinite),b.id);
  }
 });
 test('surface features stay fixed: animation only attenuates each original pixel',()=>{
@@ -44,4 +44,10 @@ test('offline texture pack contains valid image bytes for all bodies and overlay
   assert(pack[id],id);const bytes=Buffer.from(pack[id].split(',')[1],'base64');assert(bytes.length>1000,id);
   assert.equal(bytes.subarray(0,2).toString('hex'),id==='saturn_ring'?'8950':'ffd8',id);
  }
+});
+
+test('every body has a distinct, deterministic, moving dot effect with a closed loop',()=>{
+ const {BODIES,effectParticles,LOOP}=engine(),signatures=new Set();
+ for(const b of BODIES){const a=effectParticles(b.id,0),mid=effectParticles(b.id,3),end=effectParticles(b.id,LOOP);assert(a.length>10,b.id);assert.deepEqual(a,end,b.id);assert.notDeepEqual(a,mid,b.id);for(const q of [...a,...mid]){assert(Number.isFinite(q.x)&&Number.isFinite(q.y));assert(q.alpha>=0&&q.alpha<=1);assert(Math.abs(q.x)<3&&Math.abs(q.y)<3);assert(q.size>0&&q.size<2);}signatures.add(JSON.stringify(a));}
+ assert.equal(signatures.size,9);
 });
