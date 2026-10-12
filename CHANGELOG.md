@@ -16,7 +16,7 @@
 ### Changed
 
 - Added a GitHub Pages preview with solar-system, black-hole, and local-photo navigation.
-- Replaced uniform dimming with nine feature-specific dot effects over cached, fixed portraits.
+- Removed glowing particle effects; motion now stays within the existing atmospheric or solar material.
 
 - Fixed every solar-system viewing angle and dot layout; replaced rotation with slow, localized light changes.
 
@@ -26,7 +26,7 @@
 
 ### Added
 
-- Solar-system collection: Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune, now with a 16-second light cycle.
+- Solar-system collection: Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune, now with a 24-second material cycle and still portraits for Mercury, Mars and Uranus.
 
 - Procedural black-hole artwork and an existing animated GIF preview.
 - Local-photo ASCII / pixel comparison with no bundled third-party photograph.

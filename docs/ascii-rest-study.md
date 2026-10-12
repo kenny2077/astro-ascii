@@ -11,23 +11,25 @@ Reviewed 2026-10-11: the live [Earthrise](https://ascii.rest/earthrise/) page an
 
 ## Applied here
 
-The solar viewer now caches each photographic dot portrait as a canvas plate. An independent, deterministic dot layer provides visible, body-specific motion, rather than re-rendering the whole texture or applying the same nearly invisible brightness pulse to everything.
+Updated 2026-10-12 after reviewing NASA planetary photographs. The first attempt added luminous paths on top of a still image and was rejected. That layer has been removed.
 
-| Body | Authored moving layer |
+Earthrise and Night Coast are the useful references: their clouds are continuous density fields that are sampled at changing material coordinates; the shaded frame is then converted into glyphs. Our solar viewer follows this order. An atmosphere's own texture moves locally, then the result is drawn into the fixed dot grid. The planet's camera and whole-globe longitude remain fixed.
+
+| Body | Image feature and treatment |
 | --- | --- |
-| Sun | Small convection paths and three prominence arcs |
-| Mercury | Sparse sodium-tail interpretation outside the still surface |
-| Venus | Broad, slow cloud filaments |
-| Earth | Cloud filaments and a polar aurora |
-| Mars | A low ochre dust stream |
-| Jupiter | Alternating cloud-belt directions and a local storm swirl |
-| Saturn | Particles moving around the ring plane with globe occlusion |
-| Uranus | A restrained tilted atmospheric arc |
-| Neptune | Fast, thin cloud streaks |
+| Sun | Existing active-region texture deforms locally |
+| Mercury | Crater rays and impact terrain hold still |
+| Venus | Existing cloud detail shifts subtly |
+| Earth | Separate cloud map drifts above unchanged continents |
+| Mars | Valles Marineris and the ochre terrain hold still |
+| Jupiter | Existing cloud belts undergo opposing local shifts |
+| Saturn | Cloud bands shift slightly; rings stay fixed |
+| Uranus | Quiet cyan atmosphere holds still |
+| Neptune | Existing atmospheric texture shifts locally |
 
-All are illustrative, accelerated visual effects, not measurements or live observations. The details should be visible within a few seconds. There is no random frame noise, whole-globe rotation, or common scanning highlight. Pause, reduced motion, and hidden-tab behavior remain supported. Only the selected artwork animates; thumbnail portraits remain still.
+No invented sodium tail, polar light arc, dust stream, prominence particle, or ring glitter is added. Source photographs guide feature selection and framing; the textures still use the separately credited Solar System Scope maps. [Photo references](planet-photo-references.md) record mission, processing and color caveats.
 
-The reference's MIT notice remains in `licenses/bas3line-MIT.txt`. The new particle paths are original code; the separate texture license is documented in [TEXTURES.md](../art/solar-system/TEXTURES.md).
+The reference's MIT notice remains in `licenses/bas3line-MIT.txt`. The material-coordinate code is original. The image license is documented in [TEXTURES.md](../art/solar-system/TEXTURES.md).
 
 ## Galaxies
 

@@ -20,7 +20,7 @@ Animated black holes and photo-based astronomy studies. Open a page, watch the l
 | Work | Medium | What moves | Open locally |
 | --- | --- | --- | --- |
 | **Galaxies** | Four procedural spirals: Triangulum, Sculptor, Andromeda, Pinwheel | Turning discs, orbiting stars, glittering nebulae, a starburst wind, a crimson ring wave | [Live galaxies](https://kenny2077.github.io/astro-ascii/?piece=galaxies) |
-| **Solar system** | Nine fixed-angle portraits: Sun + eight planets | Body-specific cloud, dust, plasma, aurora, and ring dots | [Live solar system](https://kenny2077.github.io/astro-ascii/?piece=solar) |
+| **Solar system** | Nine fixed-angle portraits: Sun + eight planets | Photo-referenced cloud and solar texture motion | [Live solar system](https://kenny2077.github.io/astro-ascii/?piece=solar) |
 | **Black hole** | Procedural Unicode dot art | Accretion-disk texture and starlight | [Artwork](art/black-hole/index.html) |
 | **Astro photo study** | Photo-derived dot art, strict ASCII, or pixel rendering | Small brightness changes at fixed source positions | [Photo renderer](art/photo-study/index.html) |
 
@@ -32,7 +32,7 @@ The galaxies viewer holds four models, each built from its galaxy's real shape: 
 
 ![The Sun and eight planets rendered as colored character art, each framed individually](assets/solar-system.png)
 
-The solar-system viewer includes all nine bodies, shareable body links, and pause/play. It uses one rendering style: small and large Unicode dots. Each photographic portrait stays fixed while a separate dot layer moves along authored paths: solar prominences, cloud streams, dust, aurora, or rings. These accelerated effects are artistic interpretations, not live observations. There is no whole-globe rotation, scan line, or random frame noise. Keep `textures.js` beside the HTML when copying this viewer. See [the ascii.rest motion study](docs/ascii-rest-study.md).
+The solar-system viewer uses fixed-angle, photograph-referenced portraits and one style of Unicode dots. Moving detail is sampled from the existing material: Earth’s separate cloud map, gas-giant cloud belts, and the solar surface. Mercury, Mars and Uranus remain still where visible-light references offer no convincing short-timescale motion. There are no glowing particles or added objects. Each body links to a NASA photographic reference. See [the reference selection](docs/planet-photo-references.md) and [the ascii.rest motion study](docs/ascii-rest-study.md). These are bounded, accelerated texture studies, not observed weather.
 
 The collection is at an early stage. These are artistic interpretations, not scientific simulations or a published SDK. The default scenes style uses Unicode `· • ●`; the photo study also offers printable ASCII characters.
 
