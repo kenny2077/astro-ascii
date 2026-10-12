@@ -10,7 +10,7 @@
 </style>
 <main>
 <header><h1>Solar system</h1><p>One star. Eight planets. Drawn in characters.</p><a href="../../index.html">Astro ASCII</a></header>
-<section class="viewer" aria-label="Selected celestial body"><canvas id="globe" width="960" height="720" role="img" aria-label="Animated Sun in colored characters"></canvas><aside><h2 id="name">Sun</h2><p id="description"></p><div class="facts"><p id="kind"></p><p id="feature"></p><p>Fixed view · living dots <strong>16-second loop</strong></p><p id="motion-note"></p></div><div class="controls"><button id="play" aria-pressed="true">Pause</button><button id="previous" aria-label="Previous body">Previous</button><button id="next" aria-label="Next body">Next</button></div></aside></section>
+<section class="viewer" aria-label="Selected celestial body"><canvas id="globe" width="960" height="720" role="img" aria-label="Animated Sun in colored characters"></canvas><aside><h2 id="name">Sun</h2><p id="description"></p><div class="facts"><p id="kind"></p><p id="feature"></p><p>Fixed view · living dots <strong>16-second loop</strong></p><p id="motion-note"></p></div><div class="controls"><button id="play">Pause</button><button id="previous" aria-label="Previous body">Previous</button><button id="next" aria-label="Next body">Next</button></div></aside></section>
 <nav id="bodies" aria-label="Select the Sun or a planet"></nav>
 <footer><p>Photo-derived maps, drawn only in · • ●. Fixed portraits with feature-specific dot motion. Artistic effects, not a real-time physical simulation. Body sizes are not to scale. Maps are processed composites; the Sun and Neptune use enhanced color.</p><a href="https://github.com/kenny2077/astro-ascii/blob/main/art/solar-system/TEXTURES.md" target="_blank" rel="noreferrer">Maps & credits ↗</a></footer>
 </main>
@@ -167,7 +167,7 @@ function select(i){
  params.set('body',b.id);history.replaceState(null,'','?'+params);document.title=b.name+' · Astro ASCII';draw();
 }
 const buttons=BODIES.map((b,i)=>{const button=document.createElement('button');button.type='button';button.setAttribute('aria-label',b.name);const mini=document.createElement('canvas');mini.setAttribute('aria-hidden','true');const label=document.createElement('span');label.textContent=b.name;button.append(mini,label);button.onclick=()=>select(i);document.querySelector('#bodies').append(button);return button;});
-function playLabel(){const b=document.querySelector('#play');b.textContent=paused?'Play':'Pause';b.setAttribute('aria-pressed',!paused);}
+function playLabel(){document.querySelector('#play').textContent=paused?'Play':'Pause';}
 document.querySelector('#play').onclick=()=>{paused=!paused;last=0;playLabel()};document.querySelector('#previous').onclick=()=>select(selected-1);document.querySelector('#next').onclick=()=>select(selected+1);
 matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',e=>{if(e.matches){paused=true;playLabel()}});
 document.addEventListener('visibilitychange',()=>last=0);

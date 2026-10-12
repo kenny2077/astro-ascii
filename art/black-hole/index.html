@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>gargantua</title>
+<title>Black hole · Astro ASCII</title>
 <style>
   :root { --ground: #04060c; --ink: #8d97ad; --dim: #7a849c; }
   html, body { margin: 0; height: 100%; background: var(--ground); }
-  body { display: grid; place-items: center; overflow: hidden; }
-  canvas { display: block; max-width: 100vw; max-height: 100vh; }
+  body { display: grid; place-items: center; overflow: hidden; box-sizing: border-box; padding-bottom: 44px; }
+  body.shot { padding-bottom: 0; }
+  canvas { display: block; max-width: 100vw; max-height: 100%; }
   p {
     position: fixed; left: 24px; right: 24px; bottom: 16px; margin: 0;
     font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -349,11 +350,15 @@ const last = new Int16Array(W * H).fill(-1);
 let cell = 0, atlas = null;
 function size() {
   const dpr = devicePixelRatio || 1;
-  const css = Math.min(innerWidth / W, innerHeight / H);
-  cell = Math.max(2, Math.floor(css * dpr));
+  // the caption sits in its own strip below the art, never over it
+  const css = Math.min(innerWidth / W, (innerHeight - (document.body.classList.contains("shot") ? 0 : 44)) / H);
+  // whole device pixels a cell keep the dots crisp; on a phone that would leave
+  // the art small, so there it is drawn a size up and scaled down to fit
+  cell = Math.max(2, css * dpr >= 4 ? Math.floor(css * dpr) : Math.ceil(css * dpr));
   canvas.width = cell * W, canvas.height = cell * H;
-  canvas.style.width = (cell * W) / dpr + "px";
-  canvas.style.height = (cell * H) / dpr + "px";
+  const shown = Math.min(cell / dpr, css);
+  canvas.style.width = shown * W + "px";
+  canvas.style.height = shown * H + "px";
   // every dot in every colour, drawn once
   atlas = document.createElement("canvas");
   atlas.width = cell * 4, atlas.height = cell * PALETTE.length;
