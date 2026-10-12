@@ -1,5 +1,20 @@
 # Rendering
 
+## Galaxies
+
+Each galaxy is a model on a 240 × 135 grid of square cells. The disc is tilted and turned on screen by its inclination and position angle. It holds a bulge, an exponential disc, logarithmic spiral arms broken up by noise, and dust. The dust dims blue light more than red, so thin dust reads brown and thick dust dark. Knots of star formation are strung along the arms. Andromeda adds its companions M32 and M110. The disc is shaded once into a map of its own plane. Each frame turns that map and samples it twice a cell, which keeps a steep disc's thin lanes. The bulge, Andromeda's companions and the sky are shaded once on screen and hold still. Each frame then adds the moving light and draws the cells as `· • ●` by brightness, Bayer dithered, in the nearest of 60 palette colours. Only changed cells are redrawn, at 20 fps.
+
+| Galaxy | Its own motion |
+| --- | --- |
+| Triangulum (M33) | Pink nebulae glitter; light runs along threads of grey Milky Way cirrus |
+| Sculptor (NGC 253) | A starburst wind blows out of the core along the minor axis; the core flickers |
+| Andromeda (M31) | A crimson wave runs round the ring of nebulae, in the direction of rotation |
+| Pinwheel (M101) | Seen face on, the turning reads most clearly; blue clusters flicker |
+
+In all four, the arm pattern turns once every two minutes, as a spiral density wave turns as one. Its knots ride round with it. Stars orbit faster than the pattern, all at one speed along their orbits (a flat rotation curve), so the inner ones lap the outer. Arms trail the rotation. Each spark takes the colour of the disc beneath it, and dust in front still hides it. Foreground stars twinkle, and the bright ones carry four-pointed diffraction spikes. Every motion runs a whole number of times in the two-minute loop, so the loop closes exactly. The speeds are greatly accelerated: a real orbit takes hundreds of millions of years.
+
+Choose a galaxy with `?galaxy=triangulum|sculptor|andromeda|pinwheel`. `&t=6` holds a frame, and `&shot` shows the artwork alone. Reduced motion holds the frame still and skips the reveal that plays when a galaxy is chosen.
+
 ## Solar system
 
 The viewer projects licensed Solar System Scope maps onto spheres. Mercury's craters, Earth's continents and cloud layer, Mars's surface markings, and Jupiter's cloud bands come from maps rather than procedural noise. Saturn uses an inclined ring plane sampled from the provider's ring map with geometric front/back occlusion. See [texture provenance](../art/solar-system/TEXTURES.md).

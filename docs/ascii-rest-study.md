@@ -28,3 +28,7 @@ The solar viewer now caches each photographic dot portrait as a canvas plate. An
 All are illustrative, accelerated visual effects, not measurements or live observations. The details should be visible within a few seconds. There is no random frame noise, whole-globe rotation, or common scanning highlight. Pause, reduced motion, and hidden-tab behavior remain supported. Only the selected artwork animates; thumbnail portraits remain still.
 
 The reference's MIT notice remains in `licenses/bas3line-MIT.txt`. The new particle paths are original code; the separate texture license is documented in [TEXTURES.md](../art/solar-system/TEXTURES.md).
+
+## Galaxies
+
+The galaxies follow the same lesson, as procedural scenes in the manner of the reference's `galaxy.ts` and `earthrise.ts`. The still light is shaded once, and only the moving light is added each frame. Each motion has a subject and a direction: stars orbit on a flat rotation curve, Sculptor's starburst wind leaves along the minor axis, and Andromeda's crimson wave runs round its ring the way the disc turns. See [rendering](rendering.md#galaxies).

@@ -1,9 +1,11 @@
 // Turns a piece into a seamless looping GIF, dot for dot what the browser draws.
-//   node make-gif.mjs [piece.html] [out.gif] [px per cell] [fps]
-//   PAPER=1 node make-gif.mjs ...   the light-theme print: ink dots on white, brighter light as darker ink
-//   GROUND=#0d1117 node make-gif.mjs ...   a different ground colour
+//   node scripts/export-gif.mjs [piece.html] [out.gif] [px per cell] [fps]
+//   PIECE=pinwheel node scripts/export-gif.mjs art/galaxies/index.html ...   one galaxy of the galaxies page
+//   PAPER=1 node scripts/export-gif.mjs ...   the light-theme print: ink dots on white, brighter light as darker ink
+//   GROUND=#0d1117 node scripts/export-gif.mjs ...   a different ground colour
 // Chrome draws the glyph atlas once (the same font and sizes as the page); the
-// piece's frame code (between // <piece> and // </piece>) runs here, each cell
+// piece's frame code (between // <piece> and // </piece>, or the galaxies page's
+// // <galaxy-engine> block) runs here, each cell
 // is copied from the atlas, and ffmpeg makes the GIF. Needs Chrome and ffmpeg.
 import { readFileSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
 import { execFileSync, spawn } from "node:child_process";
@@ -12,8 +14,9 @@ import { join, resolve } from "node:path";
 
 const [src = "black-hole.html", out = src.replace(/\.html$/, ".gif"), cellArg = "8", fpsArg = "15"] = process.argv.slice(2);
 const CHROME = process.env.CHROME || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const code = readFileSync(src, "utf8").split("// <piece>")[1]?.split("// </piece>")[0];
-if (!code) throw new Error(`${src} has no // <piece> block`);
+const html = readFileSync(src, "utf8");
+const code = html.split("// <piece>")[1]?.split("// </piece>")[0] ?? html.split("// <galaxy-engine>")[1]?.split("// </galaxy-engine>")[0];
+if (!code) throw new Error(`${src} has no // <piece> or // <galaxy-engine> block`);
 const piece = new Function(`${code}; return { W, H, LOOP, PALETTE, GROUND, DOTS, make: typeof piece === "function" ? piece : gargantua };`)();
 const { W, H, LOOP, DOTS, make } = piece;
 let { PALETTE, GROUND } = piece;
@@ -68,7 +71,7 @@ const ff = spawn("ffmpeg", [
   "-filter_complex", "[0]split[a][b];[a]palettegen=max_colors=256:stats_mode=full[p];[b][p]paletteuse=dither=none:diff_mode=rectangle",
   "-loop", "0", out,
 ], { stdio: ["pipe", "inherit", "inherit"] });
-const frame = make();
+const frame = make(process.env.PIECE);
 const color = new Uint8Array(W * H);
 const buf = Buffer.alloc(PW * PH * 3);
 for (let f = 0; f < frames; f++) {

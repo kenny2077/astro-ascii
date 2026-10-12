@@ -3,30 +3,40 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="A living collection of astronomy in dots. Explore the Sun, eight planets, a black hole, and your own photographs.">
+<meta name="description" content="A living collection of astronomy in dots. Explore four spiral galaxies, the Sun and eight planets, a black hole, and your own photographs.">
 <title>Astro ASCII · Living astronomy in dots</title>
 <style>
-:root{color-scheme:dark;--bg:#080b11;--ink:#e8e5df;--muted:#a0aaba;--line:#303949;--gold:#e7c58f}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}header{min-height:76px;padding:16px 28px;display:flex;align-items:center;gap:32px;border-bottom:1px solid var(--line)}h1{font-size:18px;font-weight:400;margin:0;white-space:nowrap}nav{display:flex;gap:7px;flex-wrap:wrap}button,a{font:inherit;color:var(--muted)}button{padding:8px 12px;border:1px solid transparent;background:transparent;cursor:pointer;border-radius:3px}button[aria-pressed=true]{color:var(--gold);border-color:var(--line)}button:hover,a:hover{color:var(--ink)}a{text-underline-offset:4px}a:focus-visible,button:focus-visible{outline:2px solid var(--gold);outline-offset:4px}.links{display:flex;gap:20px;margin-left:auto;font-size:12px}iframe{display:block;width:100%;height:calc(100dvh - 77px);min-height:660px;border:0}::selection{background:var(--gold);color:var(--bg)}noscript{display:block;padding:24px}@media(max-width:750px){header{padding:14px;gap:12px;flex-wrap:wrap}h1{flex:1}.links{margin:0}nav{order:3;width:100%}button{padding:8px}iframe{height:calc(100dvh - 124px);min-height:700px}}
+:root{color-scheme:dark;--bg:#080b11;--ink:#e8e5df;--muted:#a0aaba;--line:#303949;--gold:#e7c58f}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}header{min-height:76px;padding:16px 28px;display:flex;align-items:center;gap:32px;border-bottom:1px solid var(--line)}h1{font-size:18px;font-weight:400;margin:0;white-space:nowrap}nav{display:flex;gap:7px;flex-wrap:wrap}button,a{font:inherit;color:var(--muted)}button{padding:8px 12px;border:1px solid transparent;background:transparent;cursor:pointer;border-radius:3px}button[aria-pressed=true]{color:var(--gold);border-color:var(--line)}button:hover,a:hover{color:var(--ink)}a{text-underline-offset:4px}a:focus-visible,button:focus-visible{outline:2px solid var(--gold);outline-offset:4px}.links{display:flex;gap:20px;margin-left:auto;font-size:12px}iframe{display:block;width:100%;height:calc(100dvh - 77px);min-height:660px;border:0}::selection{background:var(--gold);color:var(--bg)}noscript{display:block;padding:24px}@media(max-width:750px){header{padding:14px;gap:12px;flex-wrap:wrap}h1{flex:1}.links{margin:0}nav{order:3;width:100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -14px;padding:0 14px;width:calc(100% + 28px)}nav button{flex:none}button{padding:8px}iframe{height:calc(100dvh - 124px);min-height:700px}}
 </style>
 </head>
 <body>
-<header><h1>Astro ASCII</h1><nav aria-label="Artwork collections"><button data-piece="solar" aria-pressed="true">Solar system</button><button data-piece="black-hole" aria-pressed="false">Black hole</button><button data-piece="photo" aria-pressed="false">Your photo</button></nav><div class="links"><a id="open" href="art/solar-system/index.html?body=earth" target="_blank" rel="noreferrer">Open artwork ↗</a><a href="https://github.com/kenny2077/astro-ascii" target="_blank" rel="noreferrer">GitHub ↗</a></div></header>
-<main><iframe id="viewer" title="Solar system live artwork" src="art/solar-system/index.html?embed=1&amp;body=earth" allow="fullscreen"></iframe></main>
-<noscript><a href="art/solar-system/index.html">Solar system</a> · <a href="art/black-hole/index.html">Black hole</a> · <a href="art/photo-study/index.html">Photo study</a></noscript>
+<header><h1>Astro ASCII</h1><nav aria-label="Artwork collections"><button data-piece="galaxies" aria-pressed="true">Galaxies</button><button data-piece="solar" aria-pressed="false">Solar system</button><button data-piece="black-hole" aria-pressed="false">Black hole</button><button data-piece="photo" aria-pressed="false">Your photo</button></nav><div class="links"><a id="open" href="art/galaxies/index.html?galaxy=andromeda" target="_blank" rel="noreferrer">Open artwork ↗</a><a href="https://github.com/kenny2077/astro-ascii" target="_blank" rel="noreferrer">GitHub ↗</a></div></header>
+<main><iframe id="viewer" title="Galaxies live artwork" src="art/galaxies/index.html?embed=1&amp;galaxy=andromeda" allow="fullscreen"></iframe></main>
+<noscript><a href="art/galaxies/index.html">Galaxies</a> · <a href="art/solar-system/index.html">Solar system</a> · <a href="art/black-hole/index.html">Black hole</a> · <a href="art/photo-study/index.html">Photo study</a></noscript>
 <script>
-const pieces={solar:{url:'art/solar-system/index.html',title:'Solar system'},'black-hole':{url:'art/black-hole/index.html',title:'Black hole'},photo:{url:'art/photo-study/index.html',title:'Local photo study'}};
-const params=new URLSearchParams(location.search),viewer=document.getElementById('viewer');
+const pieces={galaxies:{url:'art/galaxies/index.html',title:'Galaxies',param:'galaxy',fallback:'andromeda',choices:['triangulum','sculptor','andromeda','pinwheel']},solar:{url:'art/solar-system/index.html',title:'Solar system',param:'body',fallback:'earth',choices:['sun','mercury','venus','earth','mars','jupiter','saturn','uranus','neptune']},'black-hole':{url:'art/black-hole/index.html',title:'Black hole'},photo:{url:'art/photo-study/index.html',title:'Local photo study'}};
+const params=new URLSearchParams(location.search),viewer=document.getElementById('viewer'),open=document.getElementById('open');
+let current='galaxies';
+// the piece's own choice (a galaxy, a planet), kept in this page's address so a link reopens it
+const choice=p=>p.param&&(p.choices.includes(params.get(p.param))?params.get(p.param):p.fallback);
+const link=(p,embed)=>{const c=choice(p),q=[embed&&p.param?'embed=1':'',c?p.param+'='+c:''].filter(Boolean).join('&');return p.url+(q?'?'+q:'');};
 function selectPiece(key){
- const p=pieces[key]||pieces.solar;key=pieces[key]?key:'solar';
- const body=params.get('body')||'earth',url=p.url+(key==='solar'?'?embed=1&body='+encodeURIComponent(body):'');
- viewer.src=url;viewer.title=p.title+' live artwork';
- document.getElementById('open').href=p.url+(key==='solar'?'?body='+encodeURIComponent(body):'');
+ if(!pieces[key])key='galaxies';
+ const p=pieces[key];current=key;
+ viewer.src=link(p,true);viewer.title=p.title+' live artwork';open.href=link(p,false);
  document.querySelectorAll('[data-piece]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.piece===key));
- params.set('piece',key);history.replaceState(null,'','?'+params);document.title=p.title+' · Astro ASCII';
+ for(const other of Object.values(pieces))if(other!==p&&other.param)params.delete(other.param);
+ params.set('piece',key);if(p.param)params.set(p.param,choice(p));
+ history.replaceState(null,'','?'+params);document.title=p.title+' · Astro ASCII';
 }
-addEventListener('message',event=>{if(event.source!==viewer.contentWindow||event.origin!==location.origin||event.data?.type!=='astro-body')return;const body=event.data.body;if(!['sun','mercury','venus','earth','mars','jupiter','saturn','uranus','neptune'].includes(body))return;params.set('body',body);params.set('piece','solar');history.replaceState(null,'','?'+params);document.getElementById('open').href=pieces.solar.url+'?body='+body;});
+addEventListener('message',event=>{
+ if(event.source!==viewer.contentWindow||event.origin!==location.origin)return;
+ const {type}=event.data||{},p=type==='astro-galaxy'?pieces.galaxies:type==='astro-body'?pieces.solar:null,value=p&&event.data[p.param];
+ if(!p||p!==pieces[current]||!p.choices.includes(value))return;
+ params.set(p.param,value);history.replaceState(null,'','?'+params);open.href=link(p,false);
+});
 document.querySelectorAll('[data-piece]').forEach(b=>b.onclick=()=>selectPiece(b.dataset.piece));
-if(params.has('piece')||params.has('body'))selectPiece(params.get('piece')||'solar');
+selectPiece(params.get('piece')||(params.has('body')?'solar':'galaxies'));
 </script>
 </body>
 </html>

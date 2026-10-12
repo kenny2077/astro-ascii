@@ -2,6 +2,7 @@
 
 | Component | Origin | Redistribution status |
 | --- | --- | --- |
+| Galaxies viewer | Original procedural models and dot renderer; styled after the reference photographs listed below, with no pixels sampled or traced | Project code: MIT |
 | Solar-system viewer | Original spherical projection, lighting, and dot renderer | Project code: MIT |
 | Solar-system maps and adapted preview | Solar System Scope / INOVE maps based on NASA imagery | CC BY 4.0; [full attribution and modifications](../art/solar-system/TEXTURES.md) |
 | Black-hole HTML | Existing procedural artwork in the author's workspace; lensing and dot rendering reference bas3line/ascii | Project code: MIT; upstream notice retained |
@@ -15,3 +16,5 @@
 New photography contributions must identify the original creator, source URL, license or written permission, and required attribution. Merely being available to download does not establish redistribution permission.
 
 Solar-system visual references, consulted 2026-10-11: [NASA planet overview](https://science.nasa.gov/solar-system/planets/), [Cassini Jupiter portrait](https://science.nasa.gov/resource/cassini-jupiter-portrait/), [Venus from Mariner 10](https://science.nasa.gov/photojournal/venus-from-mariner-10/), [Uranus facts](https://science.nasa.gov/uranus/facts/), and [Neptune](https://science.nasa.gov/neptune/). These inform subject selection and broad visual traits; the artwork is not a scientific reconstruction. Surface maps contain processing, enhancement, and some filled gaps. The fixed-angle light animation is artistic, not a physical event.
+
+Galaxy style references, consulted 2026-10-11 and kept outside this repository: *The Triangulum Jewel Box on Cosmic Silk* by Chuhong Yu, Chunsheng Xie and Zuoming Wang; *Charybdis, the Sculptor Galaxy* by Mark McComiskey; and *The Crimson Vortex and Sapphire Blossoms of Andromeda* by Chuhong Yu. All three are from ZWO Astronomy Photographer of the Year 2026, Galaxies. The face-on Pinwheel (M101) reference's credit is pending. The models take each galaxy's published shape and the photos' framing and colour as inspiration only. The photographs remain their authors' property.
