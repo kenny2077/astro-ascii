@@ -4,11 +4,13 @@
 
 The viewer projects licensed Solar System Scope maps onto spheres. Mercury's craters, Earth's continents and cloud layer, Mars's surface markings, and Jupiter's cloud bands come from maps rather than procedural noise. Saturn uses an inclined ring plane sampled from the provider's ring map with geometric front/back occlusion. See [texture provenance](../art/solar-system/TEXTURES.md).
 
-The dot grid adapts to the displayed canvas size at a target 12 fps. Glyphs land on whole device-pixel cells so mobile thumbnails are not fractional reductions of a dense desktop grid. All rotations repeat after 48 seconds. Choose a body with the navigation or `?body=saturn`; add `&t=0` for a fixed frame or `&shot&t=0` for artwork-only capture. There is one rendering mode, using `· • ●`. Reduced motion pauses playback, and hidden tabs do not advance animation. The bundled `textures.js` pack supports offline file opening; keep it next to `index.html`.
+Each body holds a fixed viewing angle. The mapped portrait and glyph sizes are cached, so coastlines, clouds, rings, and the dots themselves never move during playback. Two broad, fixed light regions dim and recover smoothly on a 16-second cycle. The maximum attenuation is bounded by 7.5% for planets and 11% for the Sun; there is no added glare, random noise, or moving scan line. This is an artistic lighting treatment, not physical weather or rotation.
+
+The dot grid adapts to the displayed canvas size at a target 12 fps. Glyphs land on whole device-pixel cells so mobile thumbnails are not fractional reductions of a dense desktop grid. Resize rebuilds the layout, including when paused. Choose a body with the navigation or `?body=saturn`; add `&t=0` for a still frame or `&shot&t=0` for artwork-only capture. There is one rendering mode, using `· • ●`. Reduced motion pauses playback, and hidden tabs do not advance animation. The bundled `textures.js` pack supports offline file opening; keep it next to `index.html`.
 
 Near-full-phase lighting multiplies the source color by a factor at or below one. No specular component, additive white light, or channel-clipping exposure gain is used. Glyph ink retains the sampled RGB; glyph coverage supplies the dot texture. White areas can still exist in the source, such as Earth's clouds and Jupiter's pale zones.
 
-Sizes, spin periods, lighting, and tilts are illustrative. These maps are processed composites, not a single-date spacecraft observation. Venus is desaturated toward pale cream. The solar palette and the familiar deep-blue Neptune palette are enhanced, not calibrated natural colors. This is an art collection, not a source for measurements.
+Sizes, lighting, and viewing angles are illustrative. These maps are processed composites, not a single-date spacecraft observation. Venus is desaturated toward pale cream. The solar palette and the familiar deep-blue Neptune palette are enhanced, not calibrated natural colors. This is an art collection, not a source for measurements.
 
 ## Black hole
 

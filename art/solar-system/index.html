@@ -9,15 +9,15 @@
 </style>
 <main>
 <header><h1>Solar system</h1><p>One star. Eight planets. Drawn in characters.</p><a href="../../README.md">Astro ASCII</a></header>
-<section class="viewer" aria-label="Selected celestial body"><canvas id="globe" width="960" height="720" role="img" aria-label="Animated Sun in colored characters"></canvas><aside><h2 id="name">Sun</h2><p id="description"></p><div class="facts"><p id="kind"></p><p id="feature"></p><p>Display cycle <strong>48 seconds</strong></p></div><div class="controls"><button id="play" aria-pressed="true">Pause</button><button id="previous" aria-label="Previous body">Previous</button><button id="next" aria-label="Next body">Next</button></div></aside></section>
+<section class="viewer" aria-label="Selected celestial body"><canvas id="globe" width="960" height="720" role="img" aria-label="Animated Sun in colored characters"></canvas><aside><h2 id="name">Sun</h2><p id="description"></p><div class="facts"><p id="kind"></p><p id="feature"></p><p>Fixed view · light cycle <strong>16 seconds</strong></p></div><div class="controls"><button id="play" aria-pressed="true">Pause</button><button id="previous" aria-label="Previous body">Previous</button><button id="next" aria-label="Next body">Next</button></div></aside></section>
 <nav id="bodies" aria-label="Select the Sun or a planet"></nav>
-<footer><p>Photo-derived maps, drawn only in · • ●. Sizes and rotation periods are not to scale. Maps are processed composites; the Sun and Neptune use enhanced color.</p><a href="TEXTURES.md" target="_blank" rel="noreferrer">Maps & credits ↗</a></footer>
+<footer><p>Photo-derived maps, drawn only in · • ●. Fixed angles; only gentle light changes. Body sizes are not to scale. Maps are processed composites; the Sun and Neptune use enhanced color.</p><a href="TEXTURES.md" target="_blank" rel="noreferrer">Maps & credits ↗</a></footer>
 </main>
 <script src="textures.js"></script>
 <script>
 // <solar-engine>
 
-const LOOP=48,TAU=Math.PI*2;
+const LOOP=16,TAU=Math.PI*2;
 const BODIES=[
  {id:'sun',name:'Sun',kind:'star',feature:'Solar surface · colored map',description:'A textured solar disk, rendered in warm dots. The golden palette is a visualization, not a claim about the Sun’s naked-eye color.',offset:0,tilt:0},
  {id:'mercury',name:'Mercury',kind:'planet',feature:'Impact basins & crater rays',description:'Gray impact plains and bright crater rays, taken from a mapped surface rather than generated noise.',offset:0,tilt:.04},
@@ -31,7 +31,8 @@ const BODIES=[
 ];
 const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
 let textures={};
-function setTextures(maps){textures=maps;}
+const portraits=new Map();
+function setTextures(maps){textures=maps;portraits.clear();}
 function shadeColor(color,light){return color.map(v=>v*clamp(light));}
 function sample(id,u,v){
  const map=textures[id];if(!map)throw new Error('Missing texture: '+id);
@@ -39,9 +40,9 @@ function sample(id,u,v){
  const a=(y0*map.width+x0)*4,b=(y0*map.width+x1)*4,c=(y1*map.width+x0)*4,d=(y1*map.width+x1)*4;
  return [0,1,2,3].map(j=>(map.data[a+j]*(1-fx)+map.data[b+j]*fx)*(1-fy)+(map.data[c+j]*(1-fx)+map.data[d+j]*fx)*fy);
 }
-function renderBody(id,t,width=288,height=216){
+function buildPortrait(id,width,height){
  const body=BODIES.find(b=>b.id===id);if(!body)throw new Error('Unknown body: '+id);
- const rgb=new Uint8ClampedArray(width*height*3),spin=TAU*((t%LOOP+LOOP)%LOOP)/LOOP;
+ const rgb=new Uint8ClampedArray(width*height*3);
  const radius=height*(id==='saturn'?.258:.416),ct=Math.cos(body.tilt),st=Math.sin(body.tilt);
  for(let py=0;py<height;py++)for(let px=0;px<width;px++){
   const x=(px+.5-width/2)/radius,y=-(py+.5-height/2)/radius,r2=x*x+y*y,k=(py*width+px)*3;
@@ -50,7 +51,7 @@ function renderBody(id,t,width=288,height=216){
    const z=Math.sqrt(1-r2),u=x*ct-y*st,v=x*st+y*ct;
    // Saturn is viewed above its ring plane; the other globes use near-equatorial views.
    const elevation=id==='saturn'?.30:0,vy=v*Math.cos(elevation)+z*Math.sin(elevation),vz=z*Math.cos(elevation)-v*Math.sin(elevation);
-   const longitude=Math.atan2(u,vz)+spin*(id==='venus'?-1:1),tu=.5+longitude/TAU+body.offset,tv=.5-Math.asin(clamp(vy,-1,1))/Math.PI;
+   const longitude=Math.atan2(u,vz),tu=.5+longitude/TAU+body.offset,tv=.5-Math.asin(clamp(vy,-1,1))/Math.PI;
    color=sample(id,tu,tv).slice(0,3);
    if(id==='earth'){
     const cloud=sample('earth_clouds',tu+.018,tv),opacity=clamp((cloud[0]+cloud[1]+cloud[2])/765)*.86;
@@ -77,21 +78,48 @@ function renderBody(id,t,width=288,height=216){
  }
  return rgb;
 }
+// Fixed spatial masks, no texture transport or random per-frame noise.
+function lightAt(id,t,x,y){
+ const phase=TAU*((t%LOOP+LOOP)%LOOP)/LOOP;
+ const a=Math.exp(-((x+.30)**2+(y-.24)**2)*3.2);
+ const b=Math.exp(-((x-.38)**2+(y+.18)**2)*4);
+ return 1-(id==='sun'?.11:.075)*(.65*a*(1-Math.cos(phase))/2+.35*b*(1-Math.cos(phase*2))/2);
+}
+function portrait(id,width,height){
+ const key=id+':'+width+':'+height;
+ if(!portraits.has(key)){if(portraits.size>=24)portraits.clear();portraits.set(key,buildPortrait(id,width,height));}
+ return portraits.get(key);
+}
+function renderBody(id,t,width=288,height=216){
+ const base=portrait(id,width,height),out=new Uint8ClampedArray(base.length),radius=height*(id==='saturn'?.258:.416);
+ for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+  const k=(y*width+x)*3,active=Math.max(base[k],base[k+1],base[k+2])>=20;
+  const light=active?lightAt(id,t,(x+.5-width/2)/radius,-(y+.5-height/2)/radius):1;
+  for(let j=0;j<3;j++)out[k+j]=base[k+j]*light;
+ }
+ return out;
+}
 // </solar-engine>
 
 const params=new URLSearchParams(location.search),canvas=document.querySelector('#globe');
 let ready=false,selected=Math.max(0,BODIES.findIndex(b=>b.id===params.get('body'))),time=Number(params.get('t')||0),paused=params.has('t')||matchMedia('(prefers-reduced-motion: reduce)').matches,last=0;
+const dotLayouts=new WeakMap();
 const BAYER=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
 function paint(target,id,t,small=false){
  const dpr=devicePixelRatio||1,pw=Math.max(1,Math.round(target.getBoundingClientRect().width*dpr)),ph=Math.round(pw*.75);
  const cell=Math.max(2,Math.round((small?2.5:3.2)*dpr)),w=Math.max(8,Math.floor(pw/cell)),h=Math.max(6,Math.floor(ph/cell)),rgb=renderBody(id,t,w,h),c=target.getContext('2d');
+ let layout=dotLayouts.get(target);
+ if(!layout||layout.id!==id||layout.w!==w||layout.h!==h){
+  const base=portrait(id,w,h),glyphs=new Uint8Array(w*h);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const k=(y*w+x)*3,peak=Math.max(base[k],base[k+1],base[k+2]);if(peak<20)continue;const level=clamp(peak/150),d=(BAYER[(y&3)*4+(x&3)]/16-.5)*.45;glyphs[y*w+x]=Math.max(1,Math.min(3,Math.round(1+level*2+d)));}
+  layout={id,w,h,glyphs};dotLayouts.set(target,layout);
+ }
  if(target.width!==pw||target.height!==ph){target.width=pw;target.height=ph;}
  const ox=Math.floor((pw-w*cell)/2),oy=Math.floor((ph-h*cell)/2);
  c.fillStyle='#080b11';c.fillRect(0,0,pw,ph);c.textAlign='center';c.textBaseline='middle';c.font=(cell*1.70)+'px Menlo,Consolas,monospace';
  const glyphs=' ·•●';
  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-  const k=(y*w+x)*3,r=rgb[k],g=rgb[k+1],b=rgb[k+2],peak=Math.max(r,g,b);if(peak<20)continue;
-  const level=clamp(peak/150),d=(BAYER[(y&3)*4+(x&3)]/16-.5)*.45,i=Math.max(1,Math.min(3,Math.round(1+level*2+d)));
+  const k=(y*w+x)*3,r=rgb[k],g=rgb[k+1],b=rgb[k+2],i=layout.glyphs[y*w+x];if(!i)continue;
   c.fillStyle='rgb('+r+' '+g+' '+b+')';c.fillText(glyphs[i],ox+(x+.5)*cell,oy+(y+.5)*cell);
  }
 }
@@ -119,6 +147,6 @@ async function loadTextures(){
  setTextures(Object.fromEntries(entries));ready=true;buttons.forEach((b,i)=>paint(b.querySelector('canvas'),BODIES[i].id,0,true));select(selected);requestAnimationFrame(tick);
 }
 loadTextures().catch(()=>{document.querySelector('#description').textContent='Could not load the maps. Keep textures.js beside this HTML file and reload.';document.querySelector('#play').disabled=true;});
-window.solar={select,draw,get ready(){return ready},get time(){return time},get paused(){return paused},get selected(){return BODIES[selected].id}};
+window.solar={select,draw,get glyphs(){return dotLayouts.get(canvas)?.glyphs.slice()},get ready(){return ready},get time(){return time},get paused(){return paused},get selected(){return BODIES[selected].id}};
 </script>
 </html>

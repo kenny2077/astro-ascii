@@ -8,10 +8,24 @@ test('collection contains the Sun and exactly eight planets in order',()=>{
  const {BODIES}=engine();assert.deepEqual(BODIES.map(b=>b.id),['sun','mercury','venus','earth','mars','jupiter','saturn','uranus','neptune']);
  assert.equal(BODIES.filter(b=>b.kind==='planet').length,8);
 });
-test('all nine bodies produce bounded, nonempty, moving and exactly looping frames',()=>{
+test('all nine portraits have subtle light changes and exactly looping frames',()=>{
  const {BODIES,renderBody,LOOP}=fixtures(engine());
  for(const b of BODIES){const a=renderBody(b.id,0,80,64),end=renderBody(b.id,LOOP,80,64),mid=renderBody(b.id,5,80,64);
  assert.equal(a.length,80*64*3,b.id);assert(a.some(v=>v>80),b.id);assert.deepEqual(a,end,`${b.id} seam`);assert(a.some((v,i)=>v!==mid[i]),`${b.id} motion`);assert(a.every(Number.isFinite),b.id);
+ }
+});
+test('surface features stay fixed: animation only attenuates each original pixel',()=>{
+ const {BODIES,renderBody,LOOP}=fixtures(engine());
+ for(const b of BODIES){
+  const base=renderBody(b.id,0,80,64);
+  for(const t of [LOOP/4,LOOP/2,3*LOOP/4]){
+   const frame=renderBody(b.id,t,80,64);
+   for(let k=0;k<base.length;k+=3){
+    const ratios=[];
+    for(let j=0;j<3;j++){assert(frame[k+j]<=base[k+j],`${b.id}: no added glare`);assert(frame[k+j]>=base[k+j]*.87-1,`${b.id}: bounded light change`);if(base[k+j]>40)ratios.push(frame[k+j]/base[k+j]);}
+    if(ratios.length>1)assert(Math.max(...ratios)-Math.min(...ratios)<.035,`${b.id}: original pixel color stays in place`);
+   }
+  }
  }
 });
 test('Saturn rings occupy space beyond the planetary sphere',()=>{
