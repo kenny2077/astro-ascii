@@ -17,7 +17,7 @@ test('each galaxy draws valid frames that move and close their loop',()=>{
   assert.equal(a.length,W*H,g.id);assert(a.every(v=>v>=0&&v<=3),g.id);assert(ca.every(v=>v<PALETTE.length),g.id);
   assert.deepEqual(b,a,`${g.id} loop seam`);assert.deepEqual(cb,ca,`${g.id} loop seam colour`);
   const moved=m.reduce((n,v,k)=>n+(v!==a[k]||cm[k]!==ca[k]),0);assert(moved>W*H*0.01,`${g.id} animates`);
-  assert(a.filter(v=>v===3).length>W*H*0.02,`${g.id} has bright light`);
+  assert(a.filter(v=>v===3).length>W*H*0.005,`${g.id} has bright light`);
  }
 });
 test('frames are deterministic and the galaxies are distinct',()=>{

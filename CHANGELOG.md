@@ -4,7 +4,7 @@
 
 ### Added
 
-- Galaxies: Triangulum, Sculptor, Andromeda and the Pinwheel. They are procedural spirals whose discs turn, with orbiting stars and a motion each of their own. The galaxies are now the preview site's first piece.
+- Galaxies: Triangulum, Sculptor, Andromeda and the Pinwheel. They are procedural spirals whose discs turn, with orbiting stars and a motion each of their own. The galaxies are now the preview site's first piece. Their colours are muted and their light a little dimmer, and Andromeda is shown whole.
 
 ### Fixed
 
