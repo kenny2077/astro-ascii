@@ -15,6 +15,8 @@
 
 ### Changed
 
+- Enlarged every solar-system body with per-system framing, a denser 3 px dot grid, and 2K texture sampling; full-orbit bounds remain visible.
+
 - Adopted slow natural rotation with stable illumination, independent Earth clouds, selected orbiting moons, and Saturn/Uranus ring structure. Removed the phase-lighting pulse.
 
 - Enabled animation for all nine solar portraits; strengthened cloud motion and added accelerated illumination phases over fixed rocky terrain.

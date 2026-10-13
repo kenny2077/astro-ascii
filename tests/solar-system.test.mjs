@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 const path=new URL('../art/solar-system/index.html',import.meta.url);
-function engine(){assert(existsSync(path),'solar-system artwork exists');const code=readFileSync(path,'utf8').split('// <solar-engine>')[1]?.split('// </solar-engine>')[0];assert(code,'testable rendering engine exists');return new Function(`${code};return {BODIES,renderBody,LOOP,shadeColor,setTextures,materialUV,satellites,spinLongitude};`)();}
+function engine(){assert(existsSync(path),'solar-system artwork exists');const code=readFileSync(path,'utf8').split('// <solar-engine>')[1]?.split('// </solar-engine>')[0];assert(code,'testable rendering engine exists');return new Function(`${code};return {BODIES,renderBody,LOOP,shadeColor,setTextures,materialUV,satellites,spinLongitude,FRAME_RADIUS};`)();}
 function fixtures(e){const maps={};for(const id of [...e.BODIES.map(b=>b.id),'earth_clouds','saturn_ring']){const width=64,height=32,data=new Uint8ClampedArray(width*height*4);for(let y=0;y<height;y++)for(let x=0;x<width;x++){const k=(y*width+x)*4;data[k]=80+x*2;data[k+1]=70+y*3;data[k+2]=60+x;data[k+3]=255;}maps[id]={width,height,data};}e.setTextures(maps);return e;}
 test('collection contains the Sun and exactly eight planets in order',()=>{
  const {BODIES}=engine();assert.deepEqual(BODIES.map(b=>b.id),['sun','mercury','venus','earth','mars','jupiter','saturn','uranus','neptune']);
@@ -40,3 +40,5 @@ test('satellite depth matches the ring plane and prograde agrees with surface ro
  for(const [id,tilt,flatten] of [['saturn',-.38,.40],['uranus',1.4,.28]])for(const t of [0,20,60]){const m=satellites(id,t)[0],v=m.x*Math.sin(tilt)+m.y*Math.cos(tilt);assert(Math.abs(m.z+v*Math.sqrt(1-flatten*flatten)/flatten)<1e-10);}
  for(const [id,sign] of [['earth',-1],['neptune',1]]){const a=satellites(id,0)[0],b=satellites(id,.01)[0];const ax=a.x*Math.cos(.13)-a.y*Math.sin(.13),bx=b.x*Math.cos(.13)-b.y*Math.sin(.13);const angular=a.z*(bx-ax)-ax*(b.z-a.z);assert.equal(Math.sign(angular),sign,id);}
 });
+
+test('larger framing keeps every moon inside the image for its entire orbit',()=>{const {BODIES,satellites,LOOP,FRAME_RADIUS}=engine();for(const b of BODIES){assert(FRAME_RADIUS[b.id]>=.25,b.id);for(let t=0;t<LOOP;t++)for(const m of satellites(b.id,t)){assert((Math.abs(m.x)+m.size)*FRAME_RADIUS[b.id]<2/3,b.id+' horizontal crop');assert((Math.abs(m.y)+m.size)*FRAME_RADIUS[b.id]<.5,b.id+' vertical crop');}}});

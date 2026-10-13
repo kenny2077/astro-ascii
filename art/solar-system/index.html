@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Solar system · Astro ASCII</title>
 <style>
-:root{color-scheme:dark;--bg:#080b11;--ink:#e8e5df;--muted:#a0aaba;--line:#303949;--accent:#e7c58f}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}main{max-width:1500px;margin:auto;padding:28px 40px}header{display:flex;justify-content:space-between;align-items:center;gap:20px;border-bottom:1px solid var(--line);padding-bottom:20px}header a,a{color:var(--muted);text-underline-offset:5px}header p{margin:0;font-size:12px}h1{font:400 22px/1.4 ui-monospace,monospace;margin:0}.viewer{display:grid;grid-template-columns:minmax(0,1fr) 290px;align-items:center;gap:36px;min-height:520px}canvas{display:block;width:100%;height:auto}#globe{aspect-ratio:4/3;width:min(100%,calc(64vh * 4/3));height:auto;justify-self:center}h2{font-size:36px;font-weight:400;letter-spacing:-.03em;line-height:1.2;margin:0 0 18px}#description{color:var(--muted);margin:0 0 22px;max-width:35ch}.facts{font-size:12px;margin-bottom:26px;color:var(--muted)}.facts p{margin:6px 0}.facts strong{font-weight:400;color:var(--ink)}button{font:inherit;background:transparent;border:1px solid var(--line);color:var(--ink);padding:9px 12px;cursor:pointer;border-radius:3px;min-height:42px}button:hover{border-color:var(--accent)}button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:4px}.controls{display:flex;flex-wrap:wrap;gap:8px}#bodies{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:8px;border-top:1px solid var(--line);padding-top:18px}#bodies button{border-color:transparent;padding:6px 3px 12px;color:var(--muted)}#bodies button[aria-pressed=true]{border-color:var(--accent);color:var(--accent);background:#121721}#bodies canvas{aspect-ratio:4/3}#bodies span{font-size:12px}footer{display:flex;justify-content:space-between;gap:24px;color:var(--muted);font-size:11px;margin-top:24px}footer p{max-width:82ch;margin:0}::selection{background:var(--accent);color:var(--bg)}.shot header,.shot aside,.shot #bodies,.shot footer{display:none}.shot main{padding:0;max-width:none}.shot .viewer{display:block;min-height:0}.shot #globe{width:100%}
+:root{color-scheme:dark;--bg:#080b11;--ink:#e8e5df;--muted:#a0aaba;--line:#303949;--accent:#e7c58f}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}main{max-width:1500px;margin:auto;padding:28px 40px}header{display:flex;justify-content:space-between;align-items:center;gap:20px;border-bottom:1px solid var(--line);padding-bottom:20px}header a,a{color:var(--muted);text-underline-offset:5px}header p{margin:0;font-size:12px}h1{font:400 22px/1.4 ui-monospace,monospace;margin:0}.viewer{display:grid;grid-template-columns:minmax(0,1fr) 290px;align-items:center;gap:36px;min-height:520px}canvas{display:block;width:100%;height:auto}#globe{aspect-ratio:4/3;width:min(100%,calc(78vh * 4/3));height:auto;justify-self:center}h2{font-size:36px;font-weight:400;letter-spacing:-.03em;line-height:1.2;margin:0 0 18px}#description{color:var(--muted);margin:0 0 22px;max-width:35ch}.facts{font-size:12px;margin-bottom:26px;color:var(--muted)}.facts p{margin:6px 0}.facts strong{font-weight:400;color:var(--ink)}button{font:inherit;background:transparent;border:1px solid var(--line);color:var(--ink);padding:9px 12px;cursor:pointer;border-radius:3px;min-height:42px}button:hover{border-color:var(--accent)}button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:4px}.controls{display:flex;flex-wrap:wrap;gap:8px}#bodies{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:8px;border-top:1px solid var(--line);padding-top:18px}#bodies button{border-color:transparent;padding:6px 3px 12px;color:var(--muted)}#bodies button[aria-pressed=true]{border-color:var(--accent);color:var(--accent);background:#121721}#bodies canvas{aspect-ratio:4/3}#bodies span{font-size:12px}footer{display:flex;justify-content:space-between;gap:24px;color:var(--muted);font-size:11px;margin-top:24px}footer p{max-width:82ch;margin:0}::selection{background:var(--accent);color:var(--bg)}.shot header,.shot aside,.shot #bodies,.shot footer{display:none}.shot main{padding:0;max-width:none}.shot .viewer{display:block;min-height:0}.shot #globe{width:100%}
 @media(max-width:800px){main{padding:20px}.viewer{grid-template-columns:1fr;gap:0;min-height:0}#globe{max-height:none}aside{padding:5px 0 24px}h2{font-size:28px;margin-bottom:12px}#description{max-width:65ch}.facts{margin-bottom:16px}#bodies{grid-template-columns:repeat(3,1fr)}header p{display:none}footer{display:block}footer a{display:inline-block;margin-top:12px}}
 .embedded header{display:none}.embedded main{padding-top:12px}
 </style>
@@ -19,6 +19,7 @@
 // <solar-engine>
 
 const LOOP=180,TAU=Math.PI*2;
+const FRAME_RADIUS={sun:.425,mercury:.425,venus:.425,earth:.365,mars:.335,jupiter:.30,saturn:.255,uranus:.25,neptune:.35};
 const BODIES=[
  {id:'sun',name:'Sun',kind:'star',feature:'Solar surface · colored map',description:'A textured solar disk, rendered in warm dots. The golden palette is a visualization, not a claim about the Sun’s naked-eye color.',offset:0,tilt:0},
  {id:'mercury',name:'Mercury',kind:'planet',feature:'Impact basins & crater rays',description:'Gray impact plains and bright crater rays, taken from a mapped surface rather than generated noise.',offset:0,tilt:.04},
@@ -66,7 +67,7 @@ function paintMoon(color,x,y,z,moon){
 function buildPortrait(id,width,height,t=0){
  const body=BODIES.find(b=>b.id===id);if(!body)throw new Error('Unknown body: '+id);
  const rgb=new Uint8ClampedArray(width*height*3);
- const radius=height*(id==='saturn'?.205:id==='jupiter'?.235:id==='uranus'?.23:.285),ct=Math.cos(body.tilt),st=Math.sin(body.tilt);
+ const radius=height*FRAME_RADIUS[id],ct=Math.cos(body.tilt),st=Math.sin(body.tilt);
  const moons=satellites(id,t);
  for(let py=0;py<height;py++)for(let px=0;px<width;px++){
   const x=(px+.5-width/2)/radius,y=-(py+.5-height/2)/radius,r2=x*x+y*y,k=(py*width+px)*3;
@@ -147,7 +148,7 @@ const BAYER=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
 function paint(target,id,t,small=false){
  const dpr=devicePixelRatio||1,pw=Math.max(1,Math.round(target.getBoundingClientRect().width*dpr)),ph=Math.round(pw*.75);
  // Coarser, legible dots like ascii.rest scenes. Integer device pixels avoid moire.
- const cell=Math.max(2,Math.round((small?3:4.2)*dpr)),w=Math.max(8,Math.floor(pw/cell)),h=Math.max(6,Math.floor(ph/cell)),c=target.getContext('2d');
+ const cell=Math.max(2,Math.round(3*dpr)),w=Math.max(8,Math.floor(pw/cell)),h=Math.max(6,Math.floor(ph/cell)),c=target.getContext('2d');
  let layout=dotLayouts.get(target);
  if(!layout||layout.id!==id||layout.pw!==pw||layout.ph!==ph){
   const base=portrait(id,w,h),glyphs=new Uint8Array(w*h);
@@ -188,7 +189,7 @@ if(params.has('embed'))document.body.classList.add('embedded');
 if(params.has('shot'))document.body.classList.add('shot');select(selected);playLabel();
 async function loadTextures(){
  const entries=await Promise.all(Object.entries(SOLAR_TEXTURES).map(async([id,src])=>{
-  const image=new Image();image.src=src;await image.decode();const c=document.createElement('canvas');c.width=Math.min(1024,image.width);c.height=Math.round(image.height*c.width/image.width);const x=c.getContext('2d');x.drawImage(image,0,0,c.width,c.height);
+  const image=new Image();image.src=src;await image.decode();const c=document.createElement('canvas');c.width=Math.min(2048,image.width);c.height=Math.round(image.height*c.width/image.width);const x=c.getContext('2d');x.drawImage(image,0,0,c.width,c.height);
   return [id,{width:c.width,height:c.height,data:x.getImageData(0,0,c.width,c.height).data}];
  }));
  setTextures(Object.fromEntries(entries));ready=true;buttons.forEach((b,i)=>paint(b.querySelector('canvas'),BODIES[i].id,0,true));select(selected);requestAnimationFrame(tick);
