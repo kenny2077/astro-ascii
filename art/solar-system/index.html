@@ -10,15 +10,15 @@
 </style>
 <main>
 <header><h1>Solar system</h1><p>One star. Eight planets. Drawn in characters.</p><a href="../../index.html">Astro ASCII</a></header>
-<section class="viewer" aria-label="Selected celestial body"><canvas id="globe" width="960" height="720" role="img" aria-label="Animated Sun in colored characters"></canvas><aside><h2 id="name">Sun</h2><p id="description"></p><div class="facts"><p id="kind"></p><p id="feature"></p><p>Fixed view · material study <strong>24-second loop</strong></p><p id="motion-note"></p><p><a id="photo-reference" target="_blank" rel="noreferrer">Photographic reference ↗</a></p></div><div class="controls"><button id="play">Pause</button><button id="previous" aria-label="Previous body">Previous</button><button id="next" aria-label="Next body">Next</button></div></aside></section>
+<section class="viewer" aria-label="Selected celestial body"><canvas id="globe" width="960" height="720" role="img" aria-label="Animated Sun in colored characters"></canvas><aside><h2 id="name">Sun</h2><p id="description"></p><div class="facts"><p id="kind"></p><p id="feature"></p><p>Fixed view · animated study <strong>12-second loop</strong></p><p id="motion-note"></p><p><a id="photo-reference" target="_blank" rel="noreferrer">Photographic reference ↗</a></p></div><div class="controls"><button id="play">Pause</button><button id="previous" aria-label="Previous body">Previous</button><button id="next" aria-label="Next body">Next</button></div></aside></section>
 <nav id="bodies" aria-label="Select the Sun or a planet"></nav>
-<footer><p>Photo-derived maps, drawn only in · • ●. Fixed portraits. Motion stays within the mapped atmosphere or surface; no added particles. Accelerated material studies, not observed weather. Body sizes are not to scale. Maps are processed composites; the Sun and Neptune use enhanced color.</p><a href="https://github.com/kenny2077/astro-ascii/blob/main/art/solar-system/TEXTURES.md" target="_blank" rel="noreferrer">Maps & credits ↗</a></footer>
+<footer><p>Photo-derived maps, drawn only in · • ●. Fixed portraits. Cloud motion and changing illumination, with fixed terrain and viewing angle. Accelerated artistic cycles, not observed weather or orbital timing. Body sizes are not to scale. Maps are processed composites; the Sun and Neptune use enhanced color.</p><a href="https://github.com/kenny2077/astro-ascii/blob/main/art/solar-system/TEXTURES.md" target="_blank" rel="noreferrer">Maps & credits ↗</a></footer>
 </main>
 <script src="textures.js"></script>
 <script>
 // <solar-engine>
 
-const LOOP=24,TAU=Math.PI*2;
+const LOOP=12,TAU=Math.PI*2;
 const BODIES=[
  {id:'sun',name:'Sun',kind:'star',feature:'Solar surface · colored map',description:'A textured solar disk, rendered in warm dots. The golden palette is a visualization, not a claim about the Sun’s naked-eye color.',offset:0,tilt:0},
  {id:'mercury',name:'Mercury',kind:'planet',feature:'Impact basins & crater rays',description:'Gray impact plains and bright crater rays, taken from a mapped surface rather than generated noise.',offset:0,tilt:.04},
@@ -62,7 +62,11 @@ function buildPortrait(id,width,height,t=0){
    if(id==='mars'){const l=.2126*color[0]+.7152*color[1]+.0722*color[2];color=color.map(c=>l+(c-l)*.78);}
    if(id==='venus'){const l=(color[0]+color[1]+color[2])/3;color=color.map(c=>l+(c-l)*.35);}
    // A near-full-phase portrait: broad, gentle falloff, no specular hotspot or exposure gain.
-   const diffuse=clamp(-x*.30+y*.16+z*.941),light=id==='sun'?.76+.24*Math.pow(z,.5):.18+.82*Math.pow(diffuse,.45);
+   const phase=TAU*((t%LOOP+LOOP)%LOOP)/LOOP;
+   // Like ascii.rest moon-phases: change illumination, not the fixed terrain.
+   const swing={mercury:.72,mars:.60,uranus:.52,saturn:.65}[id]??.24;
+   const angle=-.40+swing*Math.sin(phase),diffuse=clamp(x*Math.sin(angle)+y*.12+z*Math.cos(angle));
+   const light=id==='sun'?(.72+.24*Math.pow(z,.5))*(.88+.12*Math.cos(phase+u*9)*Math.cos(v*8)):.10+.90*Math.pow(diffuse,.62);
    color=shadeColor(color,light);
   }
   if(id==='saturn'){
@@ -90,12 +94,12 @@ function portrait(id,width,height){
 function materialUV(id,u,v,t){
  const phase=TAU*((t%LOOP+LOOP)%LOOP)/LOOP;
  const travel=Math.sin(phase),breathe=(1-Math.cos(phase))/2;
- if(id==='earth')return [u+.007*travel*Math.cos((v-.5)*Math.PI),v+.0012*breathe*Math.sin(u*TAU*3)];
- if(id==='venus')return [u+.004*travel*Math.sin(v*Math.PI),v+.001*breathe*Math.sin(u*TAU*2)];
- if(id==='jupiter')return [u+.0045*travel*Math.sin(v*Math.PI*12),v+.0008*breathe*Math.sin(u*TAU*4)*Math.sin(v*Math.PI)];
- if(id==='saturn')return [u+.002*travel*Math.sin(v*Math.PI*10),v];
- if(id==='neptune')return [u+.0035*travel*Math.sin(v*Math.PI*8),v+.0005*breathe*Math.sin(u*TAU*3)];
- if(id==='sun')return [u+.0018*travel*Math.sin(v*TAU*12)*Math.cos(u*TAU*8),v+.0015*breathe*Math.sin(u*TAU*11)];
+ if(id==='earth')return [u+.030*travel*Math.cos((v-.5)*Math.PI),v+.006*breathe*Math.sin(u*TAU*3)];
+ if(id==='venus')return [u+.022*travel*Math.sin(v*Math.PI),v+.004*breathe*Math.sin(u*TAU*2)];
+ if(id==='jupiter')return [u+.028*travel*Math.sin(v*Math.PI*12),v+.004*breathe*Math.sin(u*TAU*4)*Math.sin(v*Math.PI)];
+ if(id==='saturn')return [u+.022*travel*Math.sin(v*Math.PI*10),v];
+ if(id==='neptune')return [u+.030*travel*Math.sin(v*Math.PI*8),v+.004*breathe*Math.sin(u*TAU*3)];
+ if(id==='sun')return [u+.008*travel*Math.sin(v*TAU*12)*Math.cos(u*TAU*8),v+.006*breathe*Math.sin(u*TAU*11)];
  return [u,v];
 }
 function renderBody(id,t,width=200,height=150){return buildPortrait(id,width,height,t);}
@@ -134,19 +138,19 @@ function draw(t=time){if(ready)paint(canvas,BODIES[selected].id,t);}
 function select(i){
  selected=(i+BODIES.length)%BODIES.length;const b=BODIES[selected];
  document.querySelector('#name').textContent=b.name;document.querySelector('#description').textContent=ready?b.description:'Loading local texture maps…';
- document.querySelector('#kind').textContent=b.kind==='star'?'Our solar system’s star':'Planet '+selected+' from the Sun';document.querySelector('#feature').textContent=b.feature;document.querySelector('#motion-note').textContent={"sun":"Active-region texture evolves gently.","mercury":"Still cratered terrain.","venus":"Subtle cloud detail shifts across the atmosphere.","earth":"The cloud map drifts above fixed continents.","mars":"Still mapped terrain and polar ice.","jupiter":"Cloud details flow within their belts.","saturn":"Subtle cloud-band motion above fixed rings.","uranus":"A quiet visible-light portrait.","neptune":"High cloud detail shifts within the atmosphere."}[b.id];
+ document.querySelector('#kind').textContent=b.kind==='star'?'Our solar system’s star':'Planet '+selected+' from the Sun';document.querySelector('#feature').textContent=b.feature;document.querySelector('#motion-note').textContent={"sun":"Active-region texture evolves gently.","mercury":"A moving day–night boundary reveals fixed cratered terrain.","venus":"Subtle cloud detail shifts across the atmosphere.","earth":"The cloud map drifts above fixed continents.","mars":"Changing illumination reveals the canyon terrain and polar ice.","jupiter":"Cloud details flow within their belts.","saturn":"Subtle cloud-band motion above fixed rings.","uranus":"A slow phase change across the fixed cyan atmosphere.","neptune":"High cloud detail shifts within the atmosphere."}[b.id];
  document.querySelector('#photo-reference').href={"sun":"https://science.nasa.gov/sun/sunspots/","mercury":"https://science.nasa.gov/image-detail/amf-pia11406/","venus":"https://science.nasa.gov/photojournal/venus-from-mariner-10/","earth":"https://science.nasa.gov/resource/blue-marble-2002/","mars":"https://science.nasa.gov/photojournal/valles-marineris-hemisphere/","jupiter":"https://science.nasa.gov/photojournal/cassini-jupiter-portrait/","saturn":"https://science.nasa.gov/saturn/","uranus":"https://science.nasa.gov/resource/uranus-final-image/","neptune":"https://science.nasa.gov/photojournal/neptune-clouds-on-the-dark-spot/"}[b.id];
  canvas.setAttribute('aria-label',b.name+' rendered in colored dots');document.querySelectorAll('#bodies button').forEach((el,j)=>el.setAttribute('aria-pressed',j===selected));
  if(window.parent!==window)window.parent.postMessage({type:'astro-body',body:b.id},location.protocol==='file:'?'*':location.origin);
  params.set('body',b.id);history.replaceState(null,'','?'+params);document.title=b.name+' · Astro ASCII';playLabel();draw();
 }
 const buttons=BODIES.map((b,i)=>{const button=document.createElement('button');button.type='button';button.setAttribute('aria-label',b.name);const mini=document.createElement('canvas');mini.setAttribute('aria-hidden','true');const label=document.createElement('span');label.textContent=b.name;button.append(mini,label);button.onclick=()=>select(i);document.querySelector('#bodies').append(button);return button;});
-function playLabel(){const b=document.querySelector('#play'),still=['mercury','mars','uranus'].includes(BODIES[selected].id);b.disabled=still;b.textContent=still?'Still portrait':paused?'Play':'Pause';}
+function playLabel(){const b=document.querySelector('#play');b.disabled=false;b.textContent=paused?'Play':'Pause';}
 document.querySelector('#play').onclick=()=>{paused=!paused;last=0;playLabel()};document.querySelector('#previous').onclick=()=>select(selected-1);document.querySelector('#next').onclick=()=>select(selected+1);
 matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',e=>{if(e.matches){paused=true;playLabel()}});
 document.addEventListener('visibilitychange',()=>last=0);
 let resizeFrame=0;addEventListener('resize',()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(()=>{if(ready){buttons.forEach((b,i)=>paint(b.querySelector('canvas'),BODIES[i].id,0,true));draw();}});});
-function tick(now){requestAnimationFrame(tick);if(!ready||paused||document.hidden||!visible||['mercury','mars','uranus'].includes(BODIES[selected].id)){last=0;return}if(!last){last=now;return}if(now-last<1000/15)return;time=(time+Math.min(now-last,200)/1000)%LOOP;last=now;draw();}
+function tick(now){requestAnimationFrame(tick);if(!ready||paused||document.hidden||!visible){last=0;return}if(!last){last=now;return}if(now-last<1000/15)return;time=(time+Math.min(now-last,200)/1000)%LOOP;last=now;draw();}
 if(params.has('embed'))document.body.classList.add('embedded');
 if(params.has('shot'))document.body.classList.add('shot');select(selected);playLabel();
 async function loadTextures(){

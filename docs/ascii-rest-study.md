@@ -18,13 +18,13 @@ Earthrise and Night Coast are the useful references: their clouds are continuous
 | Body | Image feature and treatment |
 | --- | --- |
 | Sun | Existing active-region texture deforms locally |
-| Mercury | Crater rays and impact terrain hold still |
+| Mercury | Fixed crater terrain under a moving day–night boundary |
 | Venus | Existing cloud detail shifts subtly |
 | Earth | Separate cloud map drifts above unchanged continents |
-| Mars | Valles Marineris and the ochre terrain hold still |
+| Mars | Changing illumination over fixed Valles Marineris terrain |
 | Jupiter | Existing cloud belts undergo opposing local shifts |
 | Saturn | Cloud bands shift slightly; rings stay fixed |
-| Uranus | Quiet cyan atmosphere holds still |
+| Uranus | Moving illumination across the fixed cyan atmosphere |
 | Neptune | Existing atmospheric texture shifts locally |
 
 No invented sodium tail, polar light arc, dust stream, prominence particle, or ring glitter is added. Source photographs guide feature selection and framing; the textures still use the separately credited Solar System Scope maps. [Photo references](planet-photo-references.md) record mission, processing and color caveats.

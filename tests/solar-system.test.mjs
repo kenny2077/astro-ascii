@@ -15,7 +15,7 @@ test('fixed-view material frames loop without adding objects outside the source 
 test('rocky terrain, Uranus and Saturn rings are stable; clouds deform locally',()=>{
  const {materialUV,BODIES}=engine();
  for(const id of ['mercury','mars','uranus'])for(const t of [0,6,12])assert.deepEqual(materialUV(id,.4,.6,t),[.4,.6]);
- for(const id of ['earth','jupiter','saturn','venus','neptune','sun']){const p=materialUV(id,.37,.61,6);assert(Math.abs(p[0]-.37)<=.009);assert(Math.abs(p[1]-.61)<=.004);assert.notDeepEqual(p,[.37,.61],id);}
+ for(const id of ['earth','jupiter','saturn','venus','neptune','sun']){const p=materialUV(id,.37,.61,3);assert(Math.abs(p[0]-.37)<=.035);assert(Math.abs(p[1]-.61)<=.012);assert.notDeepEqual(p,[.37,.61],id);}
 });
 test('Saturn rings occupy space beyond the planetary sphere',()=>{
  const {renderBody}=fixtures(engine());const p=renderBody('saturn',0,160,128);let outer=0;for(let y=0;y<128;y++)for(let x=0;x<160;x++)if(Math.hypot(x-80,y-64)>40&&Math.max(...p.slice((y*160+x)*3,(y*160+x)*3+3))>45)outer++;
@@ -36,3 +36,8 @@ test('offline texture pack contains valid image bytes for all bodies and overlay
 });
 
 test('no emissive particle renderer remains',()=>{const html=readFileSync(path,'utf8');assert(!html.includes('effectParticles'));assert(!html.includes('q.alpha'));});
+
+test('every body has readily visible motion within two seconds',()=>{
+ const {BODIES,renderBody}=fixtures(engine());
+ for(const b of BODIES){const a=renderBody(b.id,0,120,90),z=renderBody(b.id,2,120,90);let sum=0,n=0,changed=0;for(let k=0;k<a.length;k+=3){if(Math.max(a[k],a[k+1],a[k+2])<24)continue;const d=(Math.abs(a[k]-z[k])+Math.abs(a[k+1]-z[k+1])+Math.abs(a[k+2]-z[k+2]))/3;sum+=d;n++;if(d>=4)changed++;}assert(sum/n>3,b.id+' perceptible color change');assert(changed/n>.15,b.id+' visible area');}
+});

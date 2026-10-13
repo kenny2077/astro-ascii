@@ -32,7 +32,7 @@ The galaxies viewer holds four models, each built from its galaxy's real shape: 
 
 ![The Sun and eight planets rendered as colored character art, each framed individually](assets/solar-system.png)
 
-The solar-system viewer uses fixed-angle, photograph-referenced portraits and one style of Unicode dots. Moving detail is sampled from the existing material: Earth’s separate cloud map, gas-giant cloud belts, and the solar surface. Mercury, Mars and Uranus remain still where visible-light references offer no convincing short-timescale motion. There are no glowing particles or added objects. Each body links to a NASA photographic reference. See [the reference selection](docs/planet-photo-references.md) and [the ascii.rest motion study](docs/ascii-rest-study.md). These are bounded, accelerated texture studies, not observed weather.
+The solar-system viewer uses fixed-angle, photograph-referenced portraits and one style of Unicode dots. Moving detail is sampled from the existing material: Earth’s separate cloud map, gas-giant cloud belts, and the solar surface. Every body animates: Mercury, Mars and Uranus keep their terrain fixed while a changing illumination direction moves the day–night boundary. There are no glowing particles or added objects. Each body links to a NASA photographic reference. See [the reference selection](docs/planet-photo-references.md) and [the ascii.rest motion study](docs/ascii-rest-study.md). These are bounded, accelerated texture studies, not observed weather.
 
 The collection is at an early stage. These are artistic interpretations, not scientific simulations or a published SDK. The default scenes style uses Unicode `· • ●`; the photo study also offers printable ASCII characters.
 

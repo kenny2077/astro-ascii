@@ -15,6 +15,8 @@
 
 ### Changed
 
+- Enabled animation for all nine solar portraits; strengthened cloud motion and added accelerated illumination phases over fixed rocky terrain.
+
 - Added a GitHub Pages preview with solar-system, black-hole, and local-photo navigation.
 - Removed glowing particle effects; motion now stays within the existing atmospheric or solar material.
 
@@ -26,7 +28,7 @@
 
 ### Added
 
-- Solar-system collection: Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune, now with a 24-second material cycle and still portraits for Mercury, Mars and Uranus.
+- Solar-system collection: Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune, now with a 12-second material cycle and illumination-phase animation for Mercury, Mars and Uranus.
 
 - Procedural black-hole artwork and an existing animated GIF preview.
 - Local-photo ASCII / pixel comparison with no bundled third-party photograph.
