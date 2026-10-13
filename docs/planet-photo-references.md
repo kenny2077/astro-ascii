@@ -21,3 +21,7 @@ NASA image credits remain on the linked pages: NASA/JPL, NASA/JPL-Caltech, NASA/
 The relevant technique is its scenes' material-first rendering: continuous cloud or water fields change, and the resulting light is converted into a restrained halftone. Our dot grid and source geography stay fixed. Only supported material regions undergo small, continuous coordinate deformations. Source ink is never turned into an unrelated particle or emissive highlight. See [the source study](ascii-rest-study.md).
 
 All nine bodies animate. Where a visible weather effect would be speculative, an illustrative illumination-phase cycle makes the portrait dynamic. All material cycles are artistic loops, not physical forecasts or motion measurements.
+
+## Rotation and surroundings — 2026-10-13
+
+The user selected slow rotation under stable light. Earlier fixed-surface and moving-illumination descriptions above are superseded by [current rendering](rendering.md#solar-system). Environment references: [NASA moons facts](https://science.nasa.gov/solar-system/moons/facts/), [Uranus tilt and rings](https://science.nasa.gov/uranus/facts/), [Triton retrograde orbit](https://science.nasa.gov/neptune/moons/triton/), and [Mercury without moons](https://science.nasa.gov/learning-resources/for-kids-and-students/what-is-the-planet-mercury-grades-5-8/). Moon names and orbital direction inform the art; distances, sizes, periods and projected orbital planes are illustrative.

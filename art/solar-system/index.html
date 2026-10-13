@@ -10,15 +10,15 @@
 </style>
 <main>
 <header><h1>Solar system</h1><p>One star. Eight planets. Drawn in characters.</p><a href="../../index.html">Astro ASCII</a></header>
-<section class="viewer" aria-label="Selected celestial body"><canvas id="globe" width="960" height="720" role="img" aria-label="Animated Sun in colored characters"></canvas><aside><h2 id="name">Sun</h2><p id="description"></p><div class="facts"><p id="kind"></p><p id="feature"></p><p>Fixed view · animated study <strong>12-second loop</strong></p><p id="motion-note"></p><p><a id="photo-reference" target="_blank" rel="noreferrer">Photographic reference ↗</a></p></div><div class="controls"><button id="play">Pause</button><button id="previous" aria-label="Previous body">Previous</button><button id="next" aria-label="Next body">Next</button></div></aside></section>
+<section class="viewer" aria-label="Selected celestial body"><canvas id="globe" width="960" height="720" role="img" aria-label="Animated Sun in colored characters"></canvas><aside><h2 id="name">Sun</h2><p id="description"></p><div class="facts"><p id="kind"></p><p id="feature"></p><p>Slow rotation · steady light</p><p id="motion-note"></p><p><a id="photo-reference" target="_blank" rel="noreferrer">Photographic reference ↗</a></p></div><div class="controls"><button id="play">Pause</button><button id="previous" aria-label="Previous body">Previous</button><button id="next" aria-label="Next body">Next</button></div></aside></section>
 <nav id="bodies" aria-label="Select the Sun or a planet"></nav>
-<footer><p>Photo-derived maps, drawn only in · • ●. Fixed portraits. Cloud motion and changing illumination, with fixed terrain and viewing angle. Accelerated artistic cycles, not observed weather or orbital timing. Body sizes are not to scale. Maps are processed composites; the Sun and Neptune use enhanced color.</p><a href="https://github.com/kenny2077/astro-ascii/blob/main/art/solar-system/TEXTURES.md" target="_blank" rel="noreferrer">Maps & credits ↗</a></footer>
+<footer><p>Photo-derived maps, drawn only in · • ●. Rotating worlds with independent clouds, rings and selected moons. Rotation and orbital periods are compressed for viewing; sizes and distances are not to scale. Maps are processed composites; the Sun and Neptune use enhanced color.</p><a href="https://github.com/kenny2077/astro-ascii/blob/main/art/solar-system/TEXTURES.md" target="_blank" rel="noreferrer">Maps & credits ↗</a></footer>
 </main>
 <script src="textures.js"></script>
 <script>
 // <solar-engine>
 
-const LOOP=12,TAU=Math.PI*2;
+const LOOP=180,TAU=Math.PI*2;
 const BODIES=[
  {id:'sun',name:'Sun',kind:'star',feature:'Solar surface · colored map',description:'A textured solar disk, rendered in warm dots. The golden palette is a visualization, not a claim about the Sun’s naked-eye color.',offset:0,tilt:0},
  {id:'mercury',name:'Mercury',kind:'planet',feature:'Impact basins & crater rays',description:'Gray impact plains and bright crater rays, taken from a mapped surface rather than generated noise.',offset:0,tilt:.04},
@@ -41,32 +41,53 @@ function sample(id,u,v){
  const a=(y0*map.width+x0)*4,b=(y0*map.width+x1)*4,c=(y1*map.width+x0)*4,d=(y1*map.width+x1)*4;
  return [0,1,2,3].map(j=>(map.data[a+j]*(1-fx)+map.data[b+j]*fx)*(1-fy)+(map.data[c+j]*(1-fx)+map.data[d+j]*fx)*fy);
 }
+// Display-compressed orbit periods and distances. Names and directions are factual.
+const MOONS={
+ earth:[['Moon',1.65,.12,1,[178,178,171],1]],
+ mars:[['Phobos',1.36,.052,3,[137,121,106],1],['Deimos',1.85,.038,1,[164,150,130],1]],
+ jupiter:[['Io',1.32,.063,4,[213,182,114],1],['Europa',1.55,.057,3,[211,200,171],1],['Ganymede',1.80,.079,2,[159,146,126],1],['Callisto',2.05,.071,1,[116,111,102],1]],
+ saturn:[['Titan',2.50,.095,1,[199,161,91],1]],
+ uranus:[['Titania',1.88,.065,1,[166,171,172],1]],
+ neptune:[['Triton',1.75,.09,1,[198,195,181],-1]]
+};
+function spinLongitude(id,t){const rate={sun:2,mercury:1,venus:-1,earth:3,mars:2,jupiter:4,saturn:3,uranus:-2,neptune:3}[id];return TAU*rate*((t%LOOP+LOOP)%LOOP)/LOOP;}
+function satellites(id,t){return (MOONS[id]||[]).map(([name,radius,size,turns,color,direction],i)=>{
+ const angle=-TAU*turns*direction*((t%LOOP+LOOP)%LOOP)/LOOP+i*1.72+.4;
+ const roll=id==='uranus'?1.40:id==='saturn'?-.38:.13,c=Math.cos(roll),s=Math.sin(roll),flatten=id==='saturn'?.40:id==='uranus'?.28:.29,u=radius*Math.cos(angle),v=radius*flatten*Math.sin(angle);
+ return {name,size,color,direction,x:u*c+v*s,y:-u*s+v*c,z:-radius*Math.sqrt(1-flatten*flatten)*Math.sin(angle)};
+});}
+function paintMoon(color,x,y,z,moon){
+ const dx=(x-moon.x)/moon.size,dy=(y-moon.y)/moon.size,q=dx*dx+dy*dy;
+ if(q>=1||moon.z<=z)return null;
+ const nz=Math.sqrt(1-q),grain=.91+.09*Math.sin(dx*17+dy*9)*Math.cos(dy*21),lit=.38+.62*clamp(-dx*.23+dy*.12+nz*.966);
+ return moon.color.map(c=>c*lit*grain);
+}
+
 function buildPortrait(id,width,height,t=0){
  const body=BODIES.find(b=>b.id===id);if(!body)throw new Error('Unknown body: '+id);
  const rgb=new Uint8ClampedArray(width*height*3);
- const radius=height*(id==='saturn'?.258:.416),ct=Math.cos(body.tilt),st=Math.sin(body.tilt);
+ const radius=height*(id==='saturn'?.205:id==='jupiter'?.235:id==='uranus'?.23:.285),ct=Math.cos(body.tilt),st=Math.sin(body.tilt);
+ const moons=satellites(id,t);
  for(let py=0;py<height;py++)for(let px=0;px<width;px++){
   const x=(px+.5-width/2)/radius,y=-(py+.5-height/2)/radius,r2=x*x+y*y,k=(py*width+px)*3;
-  let color=[8,11,17];
+  let color=[8,11,17],depth=r2<=1?Math.sqrt(1-r2):-Infinity;
   if(r2<=1){
    const z=Math.sqrt(1-r2),u=x*ct-y*st,v=x*st+y*ct;
    // Saturn is viewed above its ring plane; the other globes use near-equatorial views.
    const elevation=id==='saturn'?.41:0,vy=v*Math.cos(elevation)+z*Math.sin(elevation),vz=z*Math.cos(elevation)-v*Math.sin(elevation);
-   const longitude=Math.atan2(u,vz),tu=.5+longitude/TAU+body.offset,tv=.5-Math.asin(clamp(vy,-1,1))/Math.PI;
+   const longitude=Math.atan2(u,vz)+spinLongitude(id,t),tu=.5+longitude/TAU+body.offset,tv=.5-Math.asin(clamp(vy,-1,1))/Math.PI;
    const uv=materialUV(id,tu,tv,t);
    color=sample(id,id==='earth'?tu:uv[0],id==='earth'?tv:uv[1]).slice(0,3);
    if(id==='earth'){
-    const cloud=sample('earth_clouds',uv[0]+.018,uv[1]),opacity=clamp((cloud[0]+cloud[1]+cloud[2])/765)*.86;
+    const cloud=sample('earth_clouds',uv[0]+.018+((t%LOOP+LOOP)%LOOP)/LOOP,uv[1]),opacity=clamp((cloud[0]+cloud[1]+cloud[2])/765)*.86;
     color=color.map((c,j)=>c*(1-opacity)+[226,233,237][j]*opacity);
    }
    if(id==='mars'){const l=.2126*color[0]+.7152*color[1]+.0722*color[2];color=color.map(c=>l+(c-l)*.78);}
    if(id==='venus'){const l=(color[0]+color[1]+color[2])/3;color=color.map(c=>l+(c-l)*.35);}
    // A near-full-phase portrait: broad, gentle falloff, no specular hotspot or exposure gain.
-   const phase=TAU*((t%LOOP+LOOP)%LOOP)/LOOP;
-   // Like ascii.rest moon-phases: change illumination, not the fixed terrain.
-   const swing={mercury:.72,mars:.60,uranus:.52,saturn:.65}[id]??.24;
-   const angle=-.40+swing*Math.sin(phase),diffuse=clamp(x*Math.sin(angle)+y*.12+z*Math.cos(angle));
-   const light=id==='sun'?(.72+.24*Math.pow(z,.5))*(.88+.12*Math.cos(phase+u*9)*Math.cos(v*8)):.10+.90*Math.pow(diffuse,.62);
+   // Stable near-full-phase illumination; animation never changes exposure.
+   const diffuse=clamp(-x*.16+y*.10+z*.982);
+   const light=id==='sun'?.85+.15*Math.pow(z,.5):.46+.54*Math.pow(diffuse,.45);
    color=shadeColor(color,light);
   }
   if(id==='saturn'){
@@ -76,10 +97,22 @@ function buildPortrait(id,width,height,t=0){
     if(ringZ>globeZ){
      const ring=sample('saturn_ring',clamp((rr-1.20)/1.02,0,.9999),.5),alpha=ring[3]/255;
      // The map includes the divisions; a mild geometric shadow stays behind the planet.
-     const shadow=v>0&&Math.abs(u)<.8?.65:1,lit=shadeColor(ring.slice(0,3),shadow);
-     color=color.map((c,j)=>c*(1-alpha)+lit[j]*alpha);
+     const phase=TAU*((t%LOOP+LOOP)%LOOP)/LOOP,structure=.95+.05*Math.sin(22*Math.atan2(v/.40,u)-phase*12+rr*43);
+     const shadow=v>0&&Math.abs(u)<.8?.65:1,lit=shadeColor(ring.slice(0,3),shadow*structure);
+     color=color.map((c,j)=>c*(1-alpha)+lit[j]*alpha);depth=ringZ;
     }
    }
+  }
+  if(id==='uranus'){
+   const u=x*ct-y*st,v=x*st+y*ct,rr=Math.hypot(u,v/.28),rz=-v*.96/.28;
+   if(rz>depth&&[1.46,1.57,1.67].some(r=>Math.abs(rr-r)<.018)){const q=76+7*Math.sin(Math.atan2(v/.28,u)*18-spinLongitude(id,t)*3);color=[q*.80,q*.88,q];depth=rz;}
+  }
+  for(const moon of moons){const m=paintMoon(color,x,y,depth,moon);if(m){color=m;depth=moon.z;}}
+  // Distant field: tiny camera drift, steady star brightness. No emissive foreground particles.
+  if(depth===-Infinity&&r2>1.10){
+   const ph=TAU*((t%LOOP+LOOP)%LOOP)/LOOP,xx=px+2*Math.sin(ph),yy=py+Math.cos(ph),gx=Math.floor(xx/12),gy=Math.floor(yy/12);
+   const h=Math.sin(gx*127.1+gy*311.7)*43758.5453,f=h-Math.floor(h);
+   if(f>.55){const sx=gx*12+2+f*8,sy=gy*12+2+((f*17)%1)*8,d=Math.hypot(xx-sx,yy-sy);if(d<1.5){const v=95*Math.exp(-d*d*2);color=[8+v*.82,11+v*.89,17+v];}}
   }
   for(let j=0;j<3;j++)rgb[k+j]=color[j];
  }
@@ -92,7 +125,7 @@ function portrait(id,width,height){
 }
 // Surface motion is a bounded material-coordinate deformation, not globe rotation.
 function materialUV(id,u,v,t){
- const phase=TAU*((t%LOOP+LOOP)%LOOP)/LOOP;
+ const phase=TAU*6*((t%LOOP+LOOP)%LOOP)/LOOP;
  const travel=Math.sin(phase),breathe=(1-Math.cos(phase))/2;
  if(id==='earth')return [u+.030*travel*Math.cos((v-.5)*Math.PI),v+.006*breathe*Math.sin(u*TAU*3)];
  if(id==='venus')return [u+.022*travel*Math.sin(v*Math.PI),v+.004*breathe*Math.sin(u*TAU*2)];
@@ -130,7 +163,7 @@ function paint(target,id,t,small=false){
  c.fillStyle='#080b11';c.fillRect(0,0,pw,ph);c.textAlign='center';c.textBaseline='middle';c.font=(cell*1.65)+'px Menlo,Consolas,monospace';
  const ox=Math.floor((pw-w*cell)/2),oy=Math.floor((ph-h*cell)/2);
  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-  const k=(y*w+x)*3,g=layout.glyphs[y*w+x];if(!g)continue;
+  const k=(y*w+x)*3,peak=Math.max(rgb[k],rgb[k+1],rgb[k+2]);if(peak<22)continue;const g=peak<40?1:peak<90?2:3;
   c.fillStyle='rgb('+rgb[k]+' '+rgb[k+1]+' '+rgb[k+2]+')';c.fillText(' ·•●'[g],ox+(x+.5)*cell,oy+(y+.5)*cell);
  }
 }
@@ -138,7 +171,7 @@ function draw(t=time){if(ready)paint(canvas,BODIES[selected].id,t);}
 function select(i){
  selected=(i+BODIES.length)%BODIES.length;const b=BODIES[selected];
  document.querySelector('#name').textContent=b.name;document.querySelector('#description').textContent=ready?b.description:'Loading local texture maps…';
- document.querySelector('#kind').textContent=b.kind==='star'?'Our solar system’s star':'Planet '+selected+' from the Sun';document.querySelector('#feature').textContent=b.feature;document.querySelector('#motion-note').textContent={"sun":"Active-region texture evolves gently.","mercury":"A moving day–night boundary reveals fixed cratered terrain.","venus":"Subtle cloud detail shifts across the atmosphere.","earth":"The cloud map drifts above fixed continents.","mars":"Changing illumination reveals the canyon terrain and polar ice.","jupiter":"Cloud details flow within their belts.","saturn":"Subtle cloud-band motion above fixed rings.","uranus":"A slow phase change across the fixed cyan atmosphere.","neptune":"High cloud detail shifts within the atmosphere."}[b.id];
+ document.querySelector('#kind').textContent=b.kind==='star'?'Our solar system’s star':'Planet '+selected+' from the Sun';document.querySelector('#feature').textContent=b.feature;document.querySelector('#motion-note').textContent={"sun":"Rotating active regions and a quiet distant star field.","mercury":"Cratered terrain turns under steady light. Mercury has no moons.","venus":"Retrograde rotation beneath a moving cloud deck. Venus has no moons.","earth":"Land rotates, clouds drift independently, and the Moon orbits.","mars":"Turning canyon terrain, with Phobos and Deimos in orbit.","jupiter":"Cloud belts and the Great Red Spot, with the four Galilean moons.","saturn":"Rotating cloud bands, finely divided rings and orbiting Titan.","uranus":"Sideways rotation, faint narrow rings and orbiting Titania.","neptune":"Moving cloud detail and retrograde-orbiting Triton."}[b.id];
  document.querySelector('#photo-reference').href={"sun":"https://science.nasa.gov/sun/sunspots/","mercury":"https://science.nasa.gov/image-detail/amf-pia11406/","venus":"https://science.nasa.gov/photojournal/venus-from-mariner-10/","earth":"https://science.nasa.gov/resource/blue-marble-2002/","mars":"https://science.nasa.gov/photojournal/valles-marineris-hemisphere/","jupiter":"https://science.nasa.gov/photojournal/cassini-jupiter-portrait/","saturn":"https://science.nasa.gov/saturn/","uranus":"https://science.nasa.gov/resource/uranus-final-image/","neptune":"https://science.nasa.gov/photojournal/neptune-clouds-on-the-dark-spot/"}[b.id];
  canvas.setAttribute('aria-label',b.name+' rendered in colored dots');document.querySelectorAll('#bodies button').forEach((el,j)=>el.setAttribute('aria-pressed',j===selected));
  if(window.parent!==window)window.parent.postMessage({type:'astro-body',body:b.id},location.protocol==='file:'?'*':location.origin);

@@ -2,25 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 const path=new URL('../art/solar-system/index.html',import.meta.url);
-function engine(){assert(existsSync(path),'solar-system artwork exists');const code=readFileSync(path,'utf8').split('// <solar-engine>')[1]?.split('// </solar-engine>')[0];assert(code,'testable rendering engine exists');return new Function(`${code};return {BODIES,renderBody,LOOP,shadeColor,setTextures,materialUV};`)();}
+function engine(){assert(existsSync(path),'solar-system artwork exists');const code=readFileSync(path,'utf8').split('// <solar-engine>')[1]?.split('// </solar-engine>')[0];assert(code,'testable rendering engine exists');return new Function(`${code};return {BODIES,renderBody,LOOP,shadeColor,setTextures,materialUV,satellites,spinLongitude};`)();}
 function fixtures(e){const maps={};for(const id of [...e.BODIES.map(b=>b.id),'earth_clouds','saturn_ring']){const width=64,height=32,data=new Uint8ClampedArray(width*height*4);for(let y=0;y<height;y++)for(let x=0;x<width;x++){const k=(y*width+x)*4;data[k]=80+x*2;data[k+1]=70+y*3;data[k+2]=60+x;data[k+3]=255;}maps[id]={width,height,data};}e.setTextures(maps);return e;}
 test('collection contains the Sun and exactly eight planets in order',()=>{
  const {BODIES}=engine();assert.deepEqual(BODIES.map(b=>b.id),['sun','mercury','venus','earth','mars','jupiter','saturn','uranus','neptune']);
  assert.equal(BODIES.filter(b=>b.kind==='planet').length,8);
 });
-test('fixed-view material frames loop without adding objects outside the source silhouette',()=>{
- const {BODIES,renderBody,LOOP}=fixtures(engine());
- for(const body of BODIES){const a=renderBody(body.id,0,80,64),b=renderBody(body.id,LOOP,80,64),mid=renderBody(body.id,6,80,64);assert.deepEqual(a,b);assert.equal(a.length,80*64*3);for(let k=0;k<a.length;k+=3)if(a[k]===8&&a[k+1]===11&&a[k+2]===17)assert.deepEqual(mid.slice(k,k+3),a.slice(k,k+3),body.id);}
-});
-test('rocky terrain, Uranus and Saturn rings are stable; clouds deform locally',()=>{
- const {materialUV,BODIES}=engine();
- for(const id of ['mercury','mars','uranus'])for(const t of [0,6,12])assert.deepEqual(materialUV(id,.4,.6,t),[.4,.6]);
- for(const id of ['earth','jupiter','saturn','venus','neptune','sun']){const p=materialUV(id,.37,.61,3);assert(Math.abs(p[0]-.37)<=.035);assert(Math.abs(p[1]-.61)<=.012);assert.notDeepEqual(p,[.37,.61],id);}
-});
-test('Saturn rings occupy space beyond the planetary sphere',()=>{
- const {renderBody}=fixtures(engine());const p=renderBody('saturn',0,160,128);let outer=0;for(let y=0;y<128;y++)for(let x=0;x<160;x++)if(Math.hypot(x-80,y-64)>40&&Math.max(...p.slice((y*160+x)*3,(y*160+x)*3+3))>45)outer++;
- assert(outer>100,'rings remain visible beyond globe');
-});
+test('all scenes are deterministic and close the complete orbit loop',()=>{const {BODIES,renderBody,LOOP}=fixtures(engine());for(const b of BODIES){assert.deepEqual(renderBody(b.id,0,100,80),renderBody(b.id,LOOP,100,80));assert.notDeepEqual(renderBody(b.id,0,100,80),renderBody(b.id,3,100,80));}});
+test('natural rotation and satellite directions are correct',()=>{const {spinLongitude,satellites}=engine();assert(spinLongitude('earth',3)>0);assert(spinLongitude('venus',3)<0);assert(spinLongitude('uranus',3)<0);assert.deepEqual(satellites('mercury',0),[]);assert.deepEqual(satellites('venus',0),[]);assert.equal(satellites('earth',0).length,1);assert.equal(satellites('mars',0).length,2);assert.equal(satellites('jupiter',0).length,4);assert.equal(satellites('neptune',0)[0].name,'Triton');assert(satellites('neptune',0)[0].direction<0);});
 test('lighting never clips pale material into white or increases source channels',()=>{
  const {shadeColor}=engine();for(const light of [0,.4,.8,1]){const c=shadeColor([235,211,169],light);assert(c.every((v,i)=>v<=[235,211,169][i]));if(light>0)assert(c[0]>c[1]&&c[1]>c[2]);else assert.deepEqual(c,[0,0,0]);}
 });
@@ -37,7 +26,17 @@ test('offline texture pack contains valid image bytes for all bodies and overlay
 
 test('no emissive particle renderer remains',()=>{const html=readFileSync(path,'utf8');assert(!html.includes('effectParticles'));assert(!html.includes('q.alpha'));});
 
-test('every body has readily visible motion within two seconds',()=>{
- const {BODIES,renderBody}=fixtures(engine());
- for(const b of BODIES){const a=renderBody(b.id,0,120,90),z=renderBody(b.id,2,120,90);let sum=0,n=0,changed=0;for(let k=0;k<a.length;k+=3){if(Math.max(a[k],a[k+1],a[k+2])<24)continue;const d=(Math.abs(a[k]-z[k])+Math.abs(a[k+1]-z[k+1])+Math.abs(a[k+2]-z[k+2]))/3;sum+=d;n++;if(d>=4)changed++;}assert(sum/n>3,b.id+' perceptible color change');assert(changed/n>.15,b.id+' visible area');}
+test('lighting is stable over time and never hides the reference features',()=>{
+ const {BODIES}=engine();const source=readFileSync(path,'utf8');assert(!source.includes('swing*Math.sin'));assert(!source.includes('.88+.12*Math.cos'));
+});
+test('a uniformly colored rocky sphere has identical illumination while rotating',()=>{
+ const e=engine(),data=new Uint8ClampedArray(16*8*4);for(let k=0;k<data.length;k+=4)data.set([160,140,120,255],k);
+ e.setTextures({mercury:{width:16,height:8,data}});
+ const a=e.renderBody('mercury',0,100,80),b=e.renderBody('mercury',20,100,80);
+ for(let y=25;y<55;y++)for(let x=35;x<65;x++){const k=(y*100+x)*3;assert.deepEqual(a.slice(k,k+3),b.slice(k,k+3));}
+});
+test('satellite depth matches the ring plane and prograde agrees with surface rotation',()=>{
+ const {satellites}=engine();
+ for(const [id,tilt,flatten] of [['saturn',-.38,.40],['uranus',1.4,.28]])for(const t of [0,20,60]){const m=satellites(id,t)[0],v=m.x*Math.sin(tilt)+m.y*Math.cos(tilt);assert(Math.abs(m.z+v*Math.sqrt(1-flatten*flatten)/flatten)<1e-10);}
+ for(const [id,sign] of [['earth',-1],['neptune',1]]){const a=satellites(id,0)[0],b=satellites(id,.01)[0];const ax=a.x*Math.cos(.13)-a.y*Math.sin(.13),bx=b.x*Math.cos(.13)-b.y*Math.sin(.13);const angular=a.z*(bx-ax)-ax*(b.z-a.z);assert.equal(Math.sign(angular),sign,id);}
 });

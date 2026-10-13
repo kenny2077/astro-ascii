@@ -20,7 +20,7 @@ Animated black holes and photo-based astronomy studies. Open a page, watch the l
 | Work | Medium | What moves | Open locally |
 | --- | --- | --- | --- |
 | **Galaxies** | Four procedural spirals: Triangulum, Sculptor, Andromeda, Pinwheel | Turning discs, orbiting stars, glittering nebulae, a starburst wind, a crimson ring wave | [Live galaxies](https://kenny2077.github.io/astro-ascii/?piece=galaxies) |
-| **Solar system** | Nine fixed-angle portraits: Sun + eight planets | Photo-referenced cloud and solar texture motion | [Live solar system](https://kenny2077.github.io/astro-ascii/?piece=solar) |
+| **Solar system** | Nine rotating worlds: Sun + eight planets | Steady-lit rotation, independent clouds, rings and selected orbiting moons | [Live solar system](https://kenny2077.github.io/astro-ascii/?piece=solar) |
 | **Black hole** | Procedural Unicode dot art | Accretion-disk texture and starlight | [Artwork](art/black-hole/index.html) |
 | **Astro photo study** | Photo-derived dot art, strict ASCII, or pixel rendering | Small brightness changes at fixed source positions | [Photo renderer](art/photo-study/index.html) |
 
@@ -32,7 +32,7 @@ The galaxies viewer holds four models, each built from its galaxy's real shape: 
 
 ![The Sun and eight planets rendered as colored character art, each framed individually](assets/solar-system.png)
 
-The solar-system viewer uses fixed-angle, photograph-referenced portraits and one style of Unicode dots. Moving detail is sampled from the existing material: Earth’s separate cloud map, gas-giant cloud belts, and the solar surface. Every body animates: Mercury, Mars and Uranus keep their terrain fixed while a changing illumination direction moves the day–night boundary. There are no glowing particles or added objects. Each body links to a NASA photographic reference. See [the reference selection](docs/planet-photo-references.md) and [the ascii.rest motion study](docs/ascii-rest-study.md). These are bounded, accelerated texture studies, not observed weather.
+The solar-system viewer uses slow continuous rotation and steady lighting. Earth’s clouds move independently of its surface. Selected natural moons orbit their planets, with foreground/background occlusion; Saturn and Uranus show distinct ring systems. Mercury and Venus have no moons. Rotation periods, satellite sizes and distances are compressed for a readable art scene. Use pause to inspect each body. [Rendering details](docs/rendering.md#solar-system) and [reference sources](docs/planet-photo-references.md) describe the approximations.
 
 The collection is at an early stage. These are artistic interpretations, not scientific simulations or a published SDK. The default scenes style uses Unicode `· • ●`; the photo study also offers printable ASCII characters.
 

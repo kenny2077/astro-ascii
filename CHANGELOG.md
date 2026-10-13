@@ -15,6 +15,8 @@
 
 ### Changed
 
+- Adopted slow natural rotation with stable illumination, independent Earth clouds, selected orbiting moons, and Saturn/Uranus ring structure. Removed the phase-lighting pulse.
+
 - Enabled animation for all nine solar portraits; strengthened cloud motion and added accelerated illumination phases over fixed rocky terrain.
 
 - Added a GitHub Pages preview with solar-system, black-hole, and local-photo navigation.

@@ -11,25 +11,11 @@ Reviewed 2026-10-11: the live [Earthrise](https://ascii.rest/earthrise/) page an
 
 ## Applied here
 
-Updated 2026-10-12 after reviewing NASA planetary photographs. The first attempt added luminous paths on top of a still image and was rejected. That layer has been removed.
+Updated 2026-10-13 after the user explicitly selected slow natural rotation with stable lighting and separate cloud, ring, and satellite motion. The reference’s sphere projection and independently animated scene materials guide the implementation. The previous changing-light phase sweep is removed.
 
-Earthrise and Night Coast are the useful references: their clouds are continuous density fields that are sampled at changing material coordinates; the shaded frame is then converted into glyphs. Our solar viewer follows this order. An atmosphere's own texture moves locally, then the result is drawn into the fixed dot grid. The planet's camera and whole-globe longitude remain fixed.
+Each world turns beneath a stable light. Earth uses independent land and cloud coordinates. Satellite spheres have depth and occlusion; they are not luminous particle trails. Saturn’s mapped ring and Uranus’s narrow dark bands have different structures. Mercury and Venus have no invented moons. The distant background drifts slightly to give the surrounding scene continuity. Brightness is derived from texture and stable shading, never a global pulse.
 
-| Body | Image feature and treatment |
-| --- | --- |
-| Sun | Existing active-region texture deforms locally |
-| Mercury | Fixed crater terrain under a moving day–night boundary |
-| Venus | Existing cloud detail shifts subtly |
-| Earth | Separate cloud map drifts above unchanged continents |
-| Mars | Changing illumination over fixed Valles Marineris terrain |
-| Jupiter | Existing cloud belts undergo opposing local shifts |
-| Saturn | Cloud bands shift slightly; rings stay fixed |
-| Uranus | Moving illumination across the fixed cyan atmosphere |
-| Neptune | Existing atmospheric texture shifts locally |
-
-No invented sodium tail, polar light arc, dust stream, prominence particle, or ring glitter is added. Source photographs guide feature selection and framing; the textures still use the separately credited Solar System Scope maps. [Photo references](planet-photo-references.md) record mission, processing and color caveats.
-
-The reference's MIT notice remains in `licenses/bas3line-MIT.txt`. The material-coordinate code is original. The image license is documented in [TEXTURES.md](../art/solar-system/TEXTURES.md).
+The earlier glow-particle overlay and static-portrait experiments have been replaced. See [current rendering](rendering.md#solar-system) for periods, dimensions, and limitations. The upstream MIT notice and separate CC BY texture attribution remain intact.
 
 ## Galaxies
 
